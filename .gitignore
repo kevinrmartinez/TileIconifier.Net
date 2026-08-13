@@ -17,6 +17,10 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# DotSettings
+*.DotSettings
+*.DotSettings.user
+
 # =========================
 # Operating System Files
 # =========================

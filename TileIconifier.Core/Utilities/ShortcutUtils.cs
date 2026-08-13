@@ -30,7 +30,8 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using IWshRuntimeLibrary;
+// using IWshRuntimeLibrary;
+using Microsoft.ClearScript.Windows.Core;
 using TileIconifier.Core.Properties;
 using TileIconifier.Core.Shortcut;
 using File = System.IO.File;
@@ -40,7 +41,7 @@ namespace TileIconifier.Core.Utilities
     // Source: https://astoundingprogramming.wordpress.com/2012/12/17/how-to-get-the-target-of-a-windows-shortcut-c/
     public static class ShortcutUtils
     {
-        public static ShortcutItemTarget GetTargetInfo(string filePath)
+        public static ShortcutItemTarget? GetTargetInfo(string filePath)
         {
             var targetInfo = ResolveMsiShortcut(filePath) ?? ResolveShortcut(filePath);
 
@@ -53,8 +54,8 @@ namespace TileIconifier.Core.Utilities
 
             using (TextReader reader = new StreamReader(filePath))
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                string? line;
+                while ((line = reader.ReadLine()) is not null)
                 {
                     if (!line.StartsWith("URL=")) continue;
                     var splitLine = line.Split('=');
@@ -66,50 +67,121 @@ namespace TileIconifier.Core.Utilities
 
             return url;
         }
+        
+        private const string objShell = "shell";
+        private const string objLink = "link";
+        private const string objArray = "valueArray";
+        private const string createLink = "CreateLink";
+        private const string readLink = "ReadLink";
 
-        public static ShortcutItemTarget ResolveShortcut(string filePath)
+        public static ShortcutItemTarget? ResolveShortcut(string filePath)
         {
-            // IWshRuntimeLibrary is in the COM library "Windows Script Host Object Model"
-            var shell = new WshShell();
+            // // IWshRuntimeLibrary is in the COM library "Windows Script Host Object Model"
+            // var shell = new WshShell();
+            //
+            // try
+            // {
+            //     var shortcut = (IWshShortcut) shell.CreateShortcut(filePath);
+            //     var iconLocation = shortcut.IconLocation ?? string.Empty;
+            //     return new ShortcutItemTarget
+            //     {
+            //         FilePath = shortcut.TargetPath,
+            //         Arguments = shortcut.Arguments,
+            //         IconLocation = shortcut.IconLocation.Split(',')[0]
+            //     };
+            // }
+            // catch (COMException)
+            // {
+            //     // A COMException is thrown if the file is not a valid shortcut (.lnk) file 
+            //     return null;
+            // }
+            
+            // Again, why does creating an Array(4) is VBS results in an array with 5 positions?
+            var scriptStrings = $"""
+                                 Function {readLink}()
+                                     Dim {objArray}(2)
+                                     Set {objShell} = CreateObject("WScript.Shell")
+                                     Set {objLink} = {objShell}.CreateShortcut("{filePath}")
+                                     {objArray}(0) = {objLink}.TargetPath
+                                     {objArray}(1) = {objLink}.Arguments
+                                     {objArray}(2) = {objLink}.IconLocation
+                                     {readLink} = {objArray}
+                                 End Function
+                                 """;
 
             try
             {
-                var shortcut = (IWshShortcut) shell.CreateShortcut(filePath);
-                var iconLocation = shortcut.IconLocation ?? string.Empty;
+                var returnedObjs = RunLinkReadScript(scriptStrings);
+                var iconLoc = returnedObjs[2].ToString()?.Split(',')[0];
                 return new ShortcutItemTarget
                 {
-                    FilePath = shortcut.TargetPath,
-                    Arguments = shortcut.Arguments,
-                    IconLocation = shortcut.IconLocation.Split(',')[0]
+                    FilePath     = returnedObjs[0] as string ?? string.Empty,
+                    Arguments    = returnedObjs[1] as string ?? string.Empty,
+                    IconLocation = iconLoc ?? string.Empty
                 };
             }
-            catch (COMException)
-            {
-                // A COMException is thrown if the file is not a valid shortcut (.lnk) file 
+            catch (Exception) {
                 return null;
             }
         }
 
         public static void CreateLnkFile(string shortcutPath, string targetPath, string description,
-            string workingDirectory = null, string iconPath = null)
+            string? workingDirectory = null, string? iconPath = null)
         {
             var directoryInfo = new FileInfo(shortcutPath).Directory;
             if (directoryInfo == null) return;
-            Directory.CreateDirectory(directoryInfo.FullName);
+            if (!directoryInfo.Exists) directoryInfo.Create();
 
-            var wsh = new WshShell();
-            var shortcut = wsh.CreateShortcut(
-                shortcutPath) as IWshShortcut;
-
-            if (shortcut == null) return;
-
-            shortcut.Arguments = "";
-            shortcut.TargetPath = targetPath;
-            shortcut.WindowStyle = 1;
-            shortcut.Description = description;
-            shortcut.WorkingDirectory = workingDirectory ?? new FileInfo(targetPath).Directory?.FullName;
-            shortcut.IconLocation = iconPath ?? targetPath;
-            shortcut.Save();
+            // var wsh = new WshShell();
+            // var shortcut = wsh.CreateShortcut(
+            //     shortcutPath) as IWshShortcut;
+            //
+            // if (shortcut == null) return;
+            //
+            // shortcut.Arguments = "";
+            // shortcut.TargetPath = targetPath;
+            // shortcut.WindowStyle = 1;
+            // shortcut.Description = description;
+            // shortcut.WorkingDirectory = workingDirectory ?? new FileInfo(targetPath).Directory?.FullName;
+            // shortcut.IconLocation = iconPath ?? targetPath;
+            // shortcut.Save();
+            
+            var scriptStrings = $"""
+                                 Function {createLink}()
+                                   Set {objShell} = CreateObject("WScript.Shell")
+                                   Set {objLink} = {objShell}.CreateShortcut("{shortcutPath}")
+                                   {objLink}.TargetPath = "{targetPath}"
+                                   {objLink}.WindowStyle = 1
+                                   {objLink}.WorkingDirectory = "{workingDirectory ?? new FileInfo(targetPath).Directory?.FullName}"
+                                   {objLink}.Arguments = ""
+                                   {objLink}.Description = "{description}"
+                                   {objLink}.IconLocation = "{iconPath ?? targetPath}"
+                                   {objLink}.Save
+                                   {createLink} = 0
+                                 End Function
+                                 """;
+        
+            RunLinkWriteScript(scriptStrings);
+        }
+        
+        private static VBScriptEngine RunScriptEngine(string script)
+        {
+            var engine = new VBScriptEngine("TileIconifier.Net Script Runner", NullSyncInvoker.Instance);
+            engine.Execute(script);
+            return engine;
+        }
+    
+        private static short RunLinkWriteScript(string script)
+        {
+            var engine = RunScriptEngine(script);
+            // VBS returns Int16 (short) instead of Int32 (int)
+            return (short)engine.Invoke($"{createLink}");
+        }
+    
+        private static object[] RunLinkReadScript(string script)
+        {
+            var engine = RunScriptEngine(script);
+            return (object[])engine.Invoke($"{readLink}");
         }
 
         public static void CreateUrlFile(string path, string target)
@@ -117,7 +189,7 @@ namespace TileIconifier.Core.Utilities
             File.WriteAllText(path, string.Format(Resources.UrlFileTemplate, target));
         }
 
-        private static ShortcutItemTarget ResolveMsiShortcut(string file)
+        private static ShortcutItemTarget? ResolveMsiShortcut(string file)
         {
             var product = new StringBuilder(NativeMethods.MAX_GUID_LENGTH + 1);
             var feature = new StringBuilder(NativeMethods.MAX_FEATURE_LENGTH + 1);

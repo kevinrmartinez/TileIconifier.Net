@@ -30,10 +30,11 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Octokit;
+// using Octokit;
 
 namespace TileIconifier.Core.Utilities
 {
+    /*
     public static class UpdateUtils
     {
         public static GitHubClient Client { get; } = new GitHubClient(new ProductHeaderValue("TileIconifier"));
@@ -87,4 +88,5 @@ namespace TileIconifier.Core.Utilities
         public string LatestVersion;
         public bool UpdateAvailable;
     }
+    */
 }
