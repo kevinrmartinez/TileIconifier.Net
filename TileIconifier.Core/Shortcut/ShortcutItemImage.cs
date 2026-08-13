@@ -40,11 +40,11 @@ namespace TileIconifier.Core.Shortcut
     [XmlRoot("ShortcutItemImage")]
     public class ShortcutItemImage
     {
-        private Image _imageCache;
-        private byte[] _imageCacheBytes;
-        [XmlElement("OriginalBytes")] public byte[] Bytes;
+        private Image? _imageCache;
+        private byte[]? _imageCacheBytes;
+        [XmlElement("OriginalBytes")] public byte[]? Bytes;
 
-        [XmlElement("OriginalPath")] public string Path;
+        [XmlElement("OriginalPath")] public string? Path;
         [XmlElement("Height")] public int Height;
 
 
@@ -81,7 +81,7 @@ namespace TileIconifier.Core.Shortcut
             if (y != null) Y = (int) y;
         }
 
-        public Image CachedImage()
+        public Image? CachedImage()
         {
             if (_imageCacheBytes == Bytes) return _imageCache;
 
@@ -95,7 +95,7 @@ namespace TileIconifier.Core.Shortcut
             return _imageCache;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj == null)
                 return false;
@@ -134,12 +134,12 @@ namespace TileIconifier.Core.Shortcut
             }
         }
 
-        public static ShortcutItemImage Load(string filePath)
+        public static ShortcutItemImage? Load(string filePath)
         {
             var x = new XmlSerializer(typeof (ShortcutItemImage));
             using (var fs = new FileStream(filePath, FileMode.Open))
             {
-                return (ShortcutItemImage) x.Deserialize(fs);
+                return (ShortcutItemImage?) x.Deserialize(fs);
             }
         }
 

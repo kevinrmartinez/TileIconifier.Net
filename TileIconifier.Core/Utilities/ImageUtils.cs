@@ -37,7 +37,7 @@ namespace TileIconifier.Core.Utilities
 {
     public class ImageUtils
     {
-        public static Bitmap LoadFileToBitmap(string path)
+        public static Bitmap? LoadFileToBitmap(string path)
         {
             try
             {
@@ -68,16 +68,16 @@ namespace TileIconifier.Core.Utilities
             return null;
         }
 
-        public static byte[] ImageToByteArray(Image imageIn)
+        public static byte[]? ImageToByteArray(Image imageIn)
         {
             var converter = new ImageConverter();
             using (var tmp = new Bitmap(imageIn))
             {
-                return (byte[]) converter.ConvertTo(tmp.Clone(), typeof (byte[]));
+                return (byte[]?) converter.ConvertTo(tmp.Clone(), typeof (byte[]));
             }
         }
 
-        public static Image ByteArrayToImage(byte[] bytesIn)
+        public static Image? ByteArrayToImage(byte[]? bytesIn)
         {
             if (bytesIn == null || bytesIn.Length == 0) return null;
             using (var ms = new MemoryStream(bytesIn))
@@ -86,7 +86,7 @@ namespace TileIconifier.Core.Utilities
             }
         }
 
-        public static bool BitmapsAreEqual(Bitmap image1, Bitmap image2)
+        public static bool BitmapsAreEqual(Bitmap? image1, Bitmap? image2)
         {
             try
             {
