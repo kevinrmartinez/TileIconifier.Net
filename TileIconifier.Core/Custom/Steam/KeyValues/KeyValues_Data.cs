@@ -53,7 +53,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         /// </summary>
         public bool RemoveMe()
         {
-            if (Parent == null)
+            if (Parent is null)
                 return false;
             return Parent.RemoveKeyName(this);
         }
@@ -65,31 +65,31 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         /// <summary>
         ///     Gets or Sets the Key Name.
         /// </summary>
-        public string Key;
+        public string? Key;
 
         /// <summary>
         ///     Gets or Sets the Value of the Key.
         /// </summary>
-        public string Value;
+        public string? Value;
 
         /// <summary>
         ///     Gets or Sets Comment for that Key.
         /// </summary>
-        public string Comment;
+        public string? Comment;
 
         /// <summary>
         ///     Gets or Sets the KeyValues Parent for that Key.
         ///     return null if there are no Parent.
         /// </summary>
-        public KeyValues Parent;
+        public KeyValues? Parent;
 
-        public object Tag { get; set; }
+        public object? Tag { get; set; }
 
         #endregion
 
         #region Constructors
 
-        public KeyValuesData(string key, string value, string comment, KeyValues parent)
+        public KeyValuesData(string? key, string? value, string? comment, KeyValues? parent)
         {
             Tag = null;
             Key = key;
@@ -119,7 +119,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
 
         #region Overrides
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -134,7 +134,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         ///     true if the current object is equal to the other parameter; otherwise, false.
         /// </returns>
         /// <param name="obj">An object to compare with this object.</param>
-        public bool Equals(KeyValuesData obj)
+        public bool Equals(KeyValuesData? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;

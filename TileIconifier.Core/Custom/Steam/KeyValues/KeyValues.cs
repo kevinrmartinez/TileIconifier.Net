@@ -23,12 +23,8 @@
 */
 #endregion
 
-using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 
 namespace TileIconifier.Core.Custom.Steam.KeyValues
 {
@@ -79,21 +75,21 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
 
         #region Variables
 
-        public object Tag { get; set; }
+        public object? Tag { get; set; }
 
         public string Name { get; set; }
 
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
 
-        public List<KeyValuesData> KeyNameValues { get; set; }
+        public List<KeyValuesData> KeyNameValues { get; set; } = new();
 
-        public List<KeyValues> KeyChilds { get; set; }
+        public List<KeyValues> KeyChilds { get; set; } = new();
 
-        public List<string> IncludedFiles { get; private set; }
+        public List<string> IncludedFiles { get; private set; } = new();
 
-        public KeyValues FirstParent { get; set; }
+        public KeyValues? FirstParent { get; set; }
 
-        public KeyValues Parent { get; set; }
+        public KeyValues? Parent { get; set; }
 
         public uint NextSubKeyIndex { get; set; }
 
@@ -184,7 +180,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         {
             IncludedFiles = new List<string>();
             KeyNameValues = new List<KeyValuesData>();
-            Name = null;
+            Name = string.Empty;
             Comment = null;
             KeyChilds = new List<KeyValues>();
             FirstParent = this;
@@ -261,7 +257,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         ///     true if the current object is equal to the other parameter; otherwise, false.
         /// </returns>
         /// <param name="obj">An object to compare with this object.</param>
-        public bool Equals(KeyValues obj)
+        public bool Equals(KeyValues? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -271,7 +267,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
                    obj.NextKeyValueIndex == NextKeyValueIndex && obj.DistanceFromTop == DistanceFromTop;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -294,7 +290,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
                 var result = Name?.GetHashCode() ?? 0;
                 result = (result * 397) ^ (KeyNameValues?.GetHashCode() ?? 0);
                 result = (result * 397) ^ (KeyChilds?.GetHashCode() ?? 0);
-                if (FirstParent != this) //prevent stack overflow when hitting top level parent
+                if ((FirstParent is not null) && (FirstParent != this)) //prevent stack overflow when hitting top level parent
                 {
                     result = (result * 397) ^ (FirstParent?.GetHashCode() ?? 0);
                 }
@@ -534,7 +530,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         {
             wasQuoted = false;
             wasComment = false;
-            var kvPair = new KeyValuePair<string, string>(null, null);
+            var kvPair = new KeyValuePair<string, string>(string.Empty, string.Empty);
             if (string.IsNullOrEmpty(line))
                 return kvPair;
 
@@ -554,11 +550,11 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             if (line.StartsWith("{") || line.StartsWith("}"))
             {
                 // it's a control char, just add this one char and stop reading
-                kvPair = new KeyValuePair<string, string>(line.Substring(0, 1), null);
+                kvPair = new KeyValuePair<string, string>(line.Substring(0, 1), string.Empty);
                 return kvPair;
                 //s_pTokenBuf[1] = 0;
             }
-            string key = null;
+            string key = string.Empty;
             uint keyCount = 0;
             // read quoted strings specially
             if (line.StartsWith("\""))
@@ -621,12 +617,12 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             // Empty or NULL Checks (To return valid data)
             if (string.IsNullOrEmpty(key))
             {
-                key = null;
-                value = null;
+                key = string.Empty;
+                value = string.Empty;
             }
             else if (string.IsNullOrEmpty(value))
             {
-                value = null;
+                value = string.Empty;
             }
             kvPair = new KeyValuePair<string, string>(key, value);
             return kvPair;
@@ -667,8 +663,8 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         {
             //byte[] buffer = Utils.ReadFile(fileName);
             //            StreamReader sr = new StreamReader(fileName);
-            uint endPos = 0;
-            return LoadFromList(Utils.ReadFileToList(fileName), 0, ref endPos);
+            // uint endPos = 0;
+            return LoadFromList(Utils.ReadFileToList(fileName), 0, out _);
         }
 
         /// <summary>
@@ -680,10 +676,11 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         /// <param name="stream">List collection wich contain file lines</param>
         /// <param name="startPos">Start parse List in that position</param>
         /// <param name="endPos">Return end position index</param>
-        private bool LoadFromList(List<string> stream, uint startPos, ref uint endPos)
+        private bool LoadFromList(List<string> stream, uint startPos, out uint endPos)
         {
-            if (stream == null) return false;
-            string lastComment = null;
+            // endPos was changed from 'ref' to 'out', however this function calls itself later, so I don't if it's safe
+            // if (stream == null) return false;
+            string lastComment = string.Empty;
             var wasName = false;
             endPos = 0;
             for (var i = startPos; i < stream.Count; i++)
@@ -713,7 +710,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
                     if (!string.IsNullOrEmpty(lastComment))
                         Comment = lastComment;
                     wasName = true;
-                    lastComment = null;
+                    lastComment = string.Empty;
                     var beganIndex = RetriveIndex(stream, "{", i + 1);
                     if (beganIndex == 0) return false;
                     i = beganIndex;
@@ -722,7 +719,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
                 // special include macro (not a key name)
                 if (kvPair.Key.StartsWith("#include") && !wasQuoted)
                 {
-                    lastComment = null;
+                    lastComment = string.Empty;
                     if (string.IsNullOrEmpty(kvPair.Value)) continue;
                     AddIncludeFile(kvPair.Value, true, true);
                     continue;
@@ -732,9 +729,9 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
                 {
                     if (!wasQuoted)
                     {
-                        lastComment = null;
+                        lastComment = string.Empty;
                         var kvChild = new KeyValues("NewName");
-                        if (!kvChild.LoadFromList(stream, i - 1, ref endPos)) continue;
+                        if (!kvChild.LoadFromList(stream, i - 1, out endPos)) continue;
                         Update(kvChild, true);
                         KeyChilds.Add(kvChild);
                         if (endPos >= stream.Count) return true;
@@ -746,7 +743,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
                 if (string.IsNullOrEmpty(kvPair.Value)) continue;
                 var kvData = new KeyValuesData(kvPair.Key, kvPair.Value, lastComment, this);
                 KeyNameValues.Add(kvData);
-                lastComment = null;
+                lastComment = string.Empty;
             }
             return true;
         }
@@ -867,7 +864,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
 
         public bool RemoveMe()
         {
-            if (Parent == null) return false;
+            if (Parent is null) return false;
             return Parent.RemoveSubKey(this);
         }
 
@@ -885,8 +882,9 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             }
         }
 
-        public bool RemoveSubKey(KeyValues pSubkey)
+        public bool RemoveSubKey(KeyValues? pSubkey)
         {
+            if (pSubkey is null) return false;
             if (!KeyChilds.Remove(pSubkey)) return false;
             Update(pSubkey, false);
             return true;
@@ -903,7 +901,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             return false;
         }
 
-        public KeyValues FindKey(string keyName, bool create)
+        public KeyValues? FindKey(string keyName, bool create)
         {
             foreach (var t in KeyChilds.Where(t => t.Name == keyName))
             {
@@ -912,19 +910,19 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             if (!create) return null;
             var newKv = new KeyValues(keyName)
             {
-                FirstParent = Parent == null ? this : Parent.FirstParent,
+                FirstParent = (Parent is null) ? this : Parent.FirstParent,
                 Parent = this,
                 DistanceFromTop = DistanceFromTop + 1
             };
             return newKv;
         }
 
-        public KeyValues FindKey(string keyName)
+        public KeyValues? FindKey(string keyName)
         {
             return FindKey(keyName, false);
         }
 
-        public KeyValues FindKey(int index)
+        public KeyValues? FindKey(int index)
         {
             if (index < KeyChilds.Count && index >= 0)
                 return KeyChilds[index];
@@ -935,7 +933,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
 
         #region SubKey and KeyValues GetFirst/Next
 
-        public KeyValues GetFirstSubKey(bool resetNextSubKeyCount)
+        public KeyValues? GetFirstSubKey(bool resetNextSubKeyCount)
         {
             if (resetNextSubKeyCount)
                 NextSubKeyIndex = 1;
@@ -946,7 +944,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             return null;
         }
 
-        public KeyValues GetNextSubKey()
+        public KeyValues? GetNextSubKey()
         {
             if (NextSubKeyIndex < KeyChilds.Count)
             {
@@ -956,7 +954,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             return null;
         }
 
-        public KeyValuesData GetFirstKeyValue(bool resetNextKeyValueCount)
+        public KeyValuesData? GetFirstKeyValue(bool resetNextKeyValueCount)
         {
             if (resetNextKeyValueCount)
                 NextKeyValueIndex = 1;
@@ -967,7 +965,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             return null;
         }
 
-        public KeyValuesData GetNextKeyValue()
+        public KeyValuesData? GetNextKeyValue()
         {
             if (NextKeyValueIndex < KeyNameValues.Count)
             {
@@ -1151,7 +1149,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
 
         public string GetComment(string keyName)
         {
-            return GetComment(keyName, null);
+            return GetComment(keyName, string.Empty);
         }
 
         public string GetComment(string keyName, string defaultValue)
@@ -1160,13 +1158,13 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             if (string.IsNullOrEmpty(keyName))
                 return defaultValue;
             foreach (var t in KeyNameValues.Where(t => t.Key == keyName))
-                return t.Comment;
+                if (t.Comment is { } tComment) return tComment;
             return defaultValue;
         }
 
         public string GetValue(string keyName)
         {
-            return GetValue(keyName, null);
+            return GetValue(keyName, string.Empty);
         }
 
         public string GetValue(string keyName, string defaultValue)
@@ -1174,7 +1172,7 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
             if (string.IsNullOrEmpty(keyName))
                 return defaultValue;
             foreach (var t in KeyNameValues.Where(t => t.Key == keyName))
-                return t.Value;
+                if (t.Value is { } tValue) return tValue;
             return defaultValue;
         }
 

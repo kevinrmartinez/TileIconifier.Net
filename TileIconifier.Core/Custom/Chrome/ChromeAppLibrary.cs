@@ -45,11 +45,13 @@ namespace TileIconifier.Core.Custom.Chrome
         {
             try
             {
-                return
-                    (string)
-                        Registry.GetValue(
-                            @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe",
-                            string.Empty, null);
+                var value = (string?)
+                    Registry.GetValue(
+                        @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe",
+                        string.Empty, null);
+                
+                // An easy way to make the code throw and go to the catch block
+                return value ?? throw new InvalidDataException();
             }
             catch
             {
@@ -90,7 +92,7 @@ namespace TileIconifier.Core.Custom.Chrome
             foreach (var directory in new DirectoryInfo(AppLibraryPath).GetDirectories())
             {
                 string combinedLogoPath;
-                string appName;
+                string? appName;
 
                 var subDirectories = directory.GetDirectories();
                 if (!subDirectories.Any())
@@ -104,17 +106,8 @@ namespace TileIconifier.Core.Custom.Chrome
                     continue;
 
                 //get contents of the manifest
-                Dictionary<string, dynamic> manifestContents;
-                try
-                {
-                    manifestContents =
-                        JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(File.ReadAllText(manifestJsonPath));
-                }
-                catch
-                {
-                    // unable to read manifest file, skip
-                    continue;
-                }
+                Dictionary<string, dynamic>? manifestContents = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(File.ReadAllText(manifestJsonPath));
+                if (manifestContents is null) continue; // unable to read manifest file, skip
 
                 try
                 {
@@ -122,7 +115,8 @@ namespace TileIconifier.Core.Custom.Chrome
                     var largestRelativeLogoPath =
                         ((JObject) manifestContents["icons"]).Properties().OrderBy(k => k.Name).First().Value;
                     //get absolute path instead of relative
-                    combinedLogoPath = Path.Combine(mainFolder.FullName, largestRelativeLogoPath.Value<string>());
+                    
+                    combinedLogoPath = Path.Combine(mainFolder.FullName, largestRelativeLogoPath.Value<string>() ?? string.Empty);
                     //if the absolute path doesn't exist, leave as default
                     if (!File.Exists(combinedLogoPath))
                         combinedLogoPath = string.Empty;
@@ -150,7 +144,10 @@ namespace TileIconifier.Core.Custom.Chrome
                     //appName is the first string where the key contains either APP or EXT, and NAME (seems to work. Again, if fail, default to the non-locale name)
                     appName = ((JObject) messagesContents.First(p =>
                         (p.Key.ToUpper().Contains("APP") || p.Key.ToUpper().Contains("EXT")) &&
-                        p.Key.ToUpper().Contains("NAME")).Value)["message"].Value<string>();
+                        p.Key.ToUpper().Contains("NAME")).Value)["message"]?.Value<string>();
+
+                    // An easy way to make the code throw and go to the catch block
+                    if (appName is null) throw new InvalidDataException();  
                 }
                 catch
                 {

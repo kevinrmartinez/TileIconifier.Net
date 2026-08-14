@@ -47,11 +47,11 @@ namespace TileIconifier.Core.Custom.Builder
 
         public string ShortcutRootPath { get; internal set; }
 
-        public Image Image { get; set; } = null;
+        public Image? Image { get; set; } = null;
 
-        public string IconPath { get; set; } = null;
+        public string? IconPath { get; set; } = null;
 
-        public string WorkingFolder { get; set; } = null;
+        public string? WorkingFolder { get; set; } = null;
 
         public WindowType WindowType { get; set; } = WindowType.ActiveAndDisplayed;
     }

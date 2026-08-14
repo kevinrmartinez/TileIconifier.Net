@@ -66,7 +66,7 @@ namespace TileIconifier.Core.Custom.Builder
         }
 
 
-        protected void Build(CustomShortcut customShortcut, Image iconImage = null)
+        protected void Build(CustomShortcut customShortcut, Image? iconImage = null)
         {
             if (iconImage != null)
                 GenerateNewIcon(customShortcut, iconImage);

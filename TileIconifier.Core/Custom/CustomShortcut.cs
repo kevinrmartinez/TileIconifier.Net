@@ -37,7 +37,7 @@ namespace TileIconifier.Core.Custom
 {
     public class CustomShortcut
     {
-        private string _basicShortcutIcon;
+        private string? _basicShortcutIcon;
 
         private CustomShortcut()
         {
@@ -50,8 +50,8 @@ namespace TileIconifier.Core.Custom
             CustomShortcutType shortcutType,
             WindowType windowType,
             string shortcutRootFolder,
-            string basicIconToUse = null,
-            string workingFolder = null
+            string? basicIconToUse = null,
+            string? workingFolder = null
             )
         {
             var vbsFolderPath =
@@ -79,11 +79,11 @@ namespace TileIconifier.Core.Custom
         public string ShortcutName { get; internal set; }
         public string TargetPath { get; internal set; }
         public string TargetArguments { get; internal set; }
-        public string WorkingFolder { get; internal set; }
+        public string? WorkingFolder { get; internal set; }
         public CustomShortcutType ShortcutType { get; internal set; }
         public WindowType WindowType { get; internal set; }
 
-        internal string BasicShortcutIcon
+        internal string? BasicShortcutIcon
         {
             get { return !string.IsNullOrEmpty(_basicShortcutIcon) ? _basicShortcutIcon : TargetPath; }
             set { _basicShortcutIcon = value; }

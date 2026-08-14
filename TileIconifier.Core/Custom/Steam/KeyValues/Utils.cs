@@ -60,17 +60,18 @@ namespace TileIconifier.Core.Custom.Steam.KeyValues
         {
             try
             {
-                using (var sr = new StreamReader(filePath))
+                using var sr = new StreamReader(filePath);
+                var fileLines = new List<string>();
+                while (!sr.EndOfStream)
                 {
-                    var fileLines = new List<string>();
-                    while (!sr.EndOfStream)
-                        fileLines.Add(sr.ReadLine());
-                    return fileLines;
+                    if (sr.ReadLine() is not { } line)  continue;
+                    fileLines.Add(line);
                 }
+                return fileLines;
             }
             catch
             {
-                return null;
+                return new List<string>();
             }
         }
 

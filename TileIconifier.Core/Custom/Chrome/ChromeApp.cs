@@ -36,14 +36,14 @@ namespace TileIconifier.Core.Custom.Chrome
 {
     public class ChromeApp
     {
-        public string IconPath { get; set; }
-        public string AppId { get; set; }
-        public string AppName { get; set; }
+        public string? IconPath { get; set; }
+        public string? AppId { get; set; }
+        public string? AppName { get; set; }
 
         public string ChromeAppExecutionArgument =>
             $@"--profile-directory=Default --app-id={AppId}";
 
-        public byte[] IconAsBytes
+        public byte[]? IconAsBytes
         {
             get
             {

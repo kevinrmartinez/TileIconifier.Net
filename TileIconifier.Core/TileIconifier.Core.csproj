@@ -26,7 +26,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Resources\Google-Chrome-icon.png" />
   </ItemGroup>
   <ItemGroup>
