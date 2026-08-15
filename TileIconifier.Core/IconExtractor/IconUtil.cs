@@ -25,10 +25,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -181,10 +178,11 @@ namespace TileIconifier.Core.IconExtractor
         private static byte[] GetIconData(Icon icon)
         {
             var data = _iconDataDelegate(icon);
-            if (data != null)
+            if (data.Length > 0)
             {
                 return data;
             }
+            
             using (var ms = new MemoryStream())
             {
                 icon.Save(ms);

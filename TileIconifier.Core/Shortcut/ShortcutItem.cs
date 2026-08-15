@@ -27,11 +27,7 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 using TileIconifier.Core.Custom;
 using TileIconifier.Core.Shortcut.State;
@@ -42,7 +38,7 @@ namespace TileIconifier.Core.Shortcut
     [Serializable]
     public class ShortcutItem
     {
-        private Bitmap _standardIcon;
+        private Bitmap? _standardIcon;
 
         [NonSerialized] public ShortcutItemStateController Properties = new ShortcutItemStateController();
 
@@ -65,7 +61,7 @@ namespace TileIconifier.Core.Shortcut
         public bool IsTileIconifierCustomShortcut => new DirectoryInfo(TargetFolderPath).Parent?.FullName + "\\" ==
                                                      CustomShortcutGetters.CustomShortcutVbsPath;
 
-        public CustomShortcut CustomShortcut
+        public CustomShortcut? CustomShortcut
         {
             get
             {
@@ -114,20 +110,12 @@ namespace TileIconifier.Core.Shortcut
                 }
 
                 var xmlDoc = XDocument.Load(VisualElementManifestPath);
-                try
-                {
-                    return (bool)xmlDoc.Root.Attribute("GeneratedByTileIconifier");
-                }
-                catch
-                {
-                    //ignore
-                }
-                return false;
+                return (bool?)xmlDoc.Root?.Attribute("GeneratedByTileIconifier") ?? false;
             }
         }
 
 
-        public Bitmap StandardIcon
+        public Bitmap? StandardIcon
         {
             get
             {
@@ -151,7 +139,7 @@ namespace TileIconifier.Core.Shortcut
 
         #region Path properties
 
-        private ShortcutItemTarget _targetInfo = new ShortcutItemTarget();
+        private ShortcutItemTarget _targetInfo = new ShortcutItemTarget() {FilePath = string.Empty};
 
         public ShortcutItemTarget TargetInfo
         {
@@ -159,7 +147,7 @@ namespace TileIconifier.Core.Shortcut
             {
                 if (string.IsNullOrEmpty(_targetInfo.FilePath))
                 {
-                    _targetInfo = ShortcutUtils.GetTargetInfo(ShortcutFileInfo.FullName);
+                    _targetInfo = ShortcutUtils.GetTargetInfo(ShortcutFileInfo.FullName) ?? new() {FilePath = string.Empty};
                 }
 
                 return
@@ -168,7 +156,7 @@ namespace TileIconifier.Core.Shortcut
                             string.Equals(Path.GetExtension(_targetInfo.FilePath), e,
                                 StringComparison.InvariantCultureIgnoreCase))
                         ? _targetInfo
-                        : new ShortcutItemTarget();
+                        : new() {FilePath = string.Empty};
             }
         }
 
@@ -209,7 +197,7 @@ namespace TileIconifier.Core.Shortcut
 
     public class ShortcutItemEqualityComparer : IEqualityComparer<ShortcutItem>
     {
-        public bool Equals(ShortcutItem x, ShortcutItem y)
+        public bool Equals(ShortcutItem? x, ShortcutItem? y)
         {
             if (x == null || y == null)
                 return false;

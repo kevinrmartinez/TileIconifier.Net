@@ -28,7 +28,6 @@
 #endregion
 
 using System.Drawing;
-using System.IO;
 using Microsoft.Win32;
 using TileIconifier.Core.Properties;
 using TileIconifier.Core.Utilities;
@@ -37,7 +36,7 @@ namespace TileIconifier.Core.Custom.Steam
 {
     public class SteamGame
     {
-        private string _iconPath;
+        private string? _iconPath;
 
         public SteamGame(string appId, string gameName, string appManifestPath)
         {
@@ -50,7 +49,7 @@ namespace TileIconifier.Core.Custom.Steam
         public string GameName { get; }
         public string AppManifestPath { get; private set; }
 
-        public string IconPath
+        public string? IconPath
         {
             get
             {
@@ -61,13 +60,13 @@ namespace TileIconifier.Core.Custom.Steam
                 var defaultRegistryKey32BitOs =
                     $@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App {AppId}";
 
-                _iconPath = (string) Registry.GetValue(defaultRegistryKey, "DisplayIcon", null) ??
-                            (string) Registry.GetValue(defaultRegistryKey32BitOs, "DisplayIcon", null);
+                _iconPath = (string?) Registry.GetValue(defaultRegistryKey, "DisplayIcon", null) ??
+                            (string?) Registry.GetValue(defaultRegistryKey32BitOs, "DisplayIcon", null);
                 return _iconPath;
             }
         }
 
-        public byte[] IconAsBytes
+        public byte[]? IconAsBytes
         {
             get
             {

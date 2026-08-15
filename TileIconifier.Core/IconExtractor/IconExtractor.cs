@@ -25,11 +25,8 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -54,7 +51,7 @@ namespace TileIconifier.Core.IconExtractor
         ////////////////////////////////////////////////////////////////////////
         // Fields
 
-        private byte[][] _iconData; // Binary data of each icon.
+        private byte[][] _iconData = []; // Binary data of each icon.
 
         /// <summary>
         ///     Initializes a new instance
@@ -72,7 +69,7 @@ namespace TileIconifier.Core.IconExtractor
         /// <summary>
         ///     Gets the full path of the associated file.
         /// </summary>
-        public string FileName { get; private set; }
+        public string FileName { get; private set; } = string.Empty;
 
         /// <summary>
         ///     Gets the count of the icons in the associated file.

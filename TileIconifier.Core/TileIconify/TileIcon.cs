@@ -27,11 +27,9 @@
 
 #endregion
 
-using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Xml.Linq;
 using TileIconifier.Core.Shortcut;
 using TileIconifier.Core.Utilities;
@@ -178,7 +176,7 @@ namespace TileIconifier.Core.TileIconify
         {
             BuildIcon(fullIconPath, outputSize.Width,
                 outputSize.Height,
-                shortcutItemImage.Bytes,
+                shortcutItemImage.Bytes!,
                 (int)Math.Round(shortcutItemImage.Width * xyRatio.X, 0),
                 (int)Math.Round(shortcutItemImage.Height * xyRatio.Y, 0),
                 (int)Math.Round(shortcutItemImage.X * xyRatio.X, 0),
@@ -192,14 +190,20 @@ namespace TileIconifier.Core.TileIconify
             Enums.ColorSelection tileIconifierColorSelection,
             string backgroundColor)
         {
+            
             IoUtils.ForceDelete(filePath);
             using (var fs = new FileStream(filePath, FileMode.Create))
             {
                 var outputBitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
 
                 var tempImage = ImageUtils.ByteArrayToImage(imageBytes);
+                if (tempImage is null)
+                {
+                    outputBitmap.Dispose();
+                    return;
+                }
+                
                 tempImage = ImageUtils.ScaleImage(tempImage, imageWidth, imageHeight);
-
                 using (var graphics = Graphics.FromImage(outputBitmap))
                 {
                     if (Config.StartMenuUpgradeEnabled && tileIconifierColorSelection != Enums.ColorSelection.Default)

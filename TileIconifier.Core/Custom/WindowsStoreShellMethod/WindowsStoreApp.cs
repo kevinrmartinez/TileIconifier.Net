@@ -27,8 +27,6 @@
 
 #endregion
 
-using System.Collections.Generic;
-
 namespace TileIconifier.Core.Custom.WindowsStoreShellMethod
 {
     public class WindowsStoreApp
@@ -48,7 +46,7 @@ namespace TileIconifier.Core.Custom.WindowsStoreShellMethod
 
     public class WindowsStoreAppEqualityComparer : IEqualityComparer<WindowsStoreApp>
     {
-        public bool Equals(WindowsStoreApp x, WindowsStoreApp y)
+        public bool Equals(WindowsStoreApp? x, WindowsStoreApp? y)
         {
             if (x == null || y == null)
                 return false;

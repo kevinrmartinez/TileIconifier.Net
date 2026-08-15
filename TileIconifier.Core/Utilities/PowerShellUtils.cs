@@ -27,9 +27,6 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Management.Automation;
 using TileIconifier.Core.Shortcut;
 
@@ -52,25 +49,20 @@ namespace TileIconifier.Core.Utilities
             }
         }
 
-        public static void MarryAppIDs(List<ShortcutItem> shortcutsList)
+        public static void MarryAppIDs(List<ShortcutItem>? shortcutsList)
         {
+            if (shortcutsList == null)  return;
+            
             using (var powershellInstance = PowerShell.Create())
             {
                 powershellInstance.AddCommand("Get-StartApps");
                 var results = powershellInstance.Invoke();
                 foreach (var properties in results.Select(result => result.Properties))
                 {
-                    try
-                    {
-                        var shortcutItem =
-                            shortcutsList.First(s => Path.GetFileNameWithoutExtension(s.ShortcutFileInfo.Name) ==
-                                                     (string) properties["Name"].Value);
-                        shortcutItem.AppId = properties["AppID"].Value.ToString();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    var shortcutItem =
+                        shortcutsList.First(s => Path.GetFileNameWithoutExtension(s.ShortcutFileInfo.Name) ==
+                                                 (string) properties["Name"].Value);
+                    shortcutItem.AppId = properties["AppID"].Value.ToString() ?? string.Empty;
                 }
             }
         }

@@ -28,7 +28,6 @@
 #endregion
 
 using Microsoft.Win32;
-using System.Collections.Generic;
 using System.Drawing;
 using TileIconifier.Core.TileIconify;
 
@@ -36,10 +35,10 @@ namespace TileIconifier.Core.Shortcut
 {
     public static class ShortcutConstantsAndEnums
     {
-        public static Size MediumShortcutOutputSize => new Size(300, 300);
-        public static Size MediumShortcutDisplaySize => new Size(100, 100);
-        public static Size SmallShortcutOutputSize => new Size(150, 150);
-        public static Size SmallShortcutDisplaySize => new Size(50, 50);
+        public static Size MediumShortcutOutputSize => new(300, 300);
+        public static Size MediumShortcutDisplaySize => new(100, 100);
+        public static Size SmallShortcutOutputSize => new(150, 150);
+        public static Size SmallShortcutDisplaySize => new(50, 50);
 
         public static XyRatio MediumXyRatio
             =>
@@ -62,7 +61,7 @@ namespace TileIconifier.Core.Shortcut
             }
         }
 
-        public static string DefaultAccentColor
+        public static string? DefaultAccentColor
         {
             get
             {

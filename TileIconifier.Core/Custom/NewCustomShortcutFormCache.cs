@@ -35,11 +35,11 @@ namespace TileIconifier.Core.Custom
 {
     public class NewCustomShortcutFormCache
     {
-        private byte[] _currentIconBytes;
+        private byte[]? _currentIconBytes;
 
-        private Image _iconCache;
-        private byte[] _newIconBytes;
-        public string ShortcutName { get; set; }
+        private Image? _iconCache;
+        private byte[]? _newIconBytes;
+        public string ShortcutName { get; set; } = string.Empty;
         public ShortcutUser AllOrCurrentUser { get; set; }
 
         public void SetIconBytes(byte[] bytes)
@@ -48,7 +48,7 @@ namespace TileIconifier.Core.Custom
             _newIconBytes = bytes;
         }
 
-        public Image GetIcon()
+        public Image? GetIcon()
         {
             var iconBytesChanged = (_currentIconBytes != null && _newIconBytes != null &&
                                     !_currentIconBytes.SequenceEqual(_newIconBytes)) ||

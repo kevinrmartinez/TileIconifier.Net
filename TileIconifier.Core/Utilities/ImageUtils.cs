@@ -27,11 +27,9 @@
 
 #endregion
 
-using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.IO;
 
 namespace TileIconifier.Core.Utilities
 {
@@ -55,7 +53,7 @@ namespace TileIconifier.Core.Utilities
             return null;
         }
 
-        public static byte[] LoadFileToByteArray(string path)
+        public static byte[]? LoadFileToByteArray(string path)
         {
             try
             {

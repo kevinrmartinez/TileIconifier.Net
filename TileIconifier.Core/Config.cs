@@ -27,9 +27,7 @@
 
 #endregion
 
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Xml.Serialization;
 using TileIconifier.Core.Utilities;
 
@@ -105,7 +103,8 @@ namespace TileIconifier.Core
                 using (var xmlFile = new FileStream(filePath, FileMode.Open))
                 {
                     var xmlDeserializer = new XmlSerializer(typeof(Config));
-                    var config = (Config)xmlDeserializer.Deserialize(xmlFile);
+                    var config = (Config?)xmlDeserializer.Deserialize(xmlFile);
+                    if (config is null) return new Config(filePath);
                     config.LoadedConfigFilePath = filePath;
                     return config;
                 }

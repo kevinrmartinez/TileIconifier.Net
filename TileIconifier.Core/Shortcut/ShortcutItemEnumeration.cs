@@ -27,10 +27,6 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using TileIconifier.Core.Utilities;
 
@@ -38,7 +34,7 @@ namespace TileIconifier.Core.Shortcut
 {
     public static class ShortcutItemEnumeration
     {
-        private static List<ShortcutItem> _shortcutsCache;
+        private static List<ShortcutItem>? _shortcutsCache;
 
         /// <summary>
         ///     Gather a list of ShortcutItems from the current environment
@@ -64,14 +60,14 @@ namespace TileIconifier.Core.Shortcut
             foreach (var pathToScan in pathsToScan)
             {
                 //Recursively go through all folders of lnk files, adding each ShortcutItem to the list
-                Action<string, Action<string>> applyAllFiles = null;
+                Action<string, Action<string>>? applyAllFiles = null;
                 applyAllFiles = (folder, fileAction) =>
                 {
                     foreach (var file in Directory.GetFiles(folder)) fileAction(file);
                     foreach (var subDir in Directory.GetDirectories(folder))
                         try
                         {
-                            applyAllFiles(subDir, fileAction);
+                            applyAllFiles!(subDir, fileAction);
                         }
                         catch
                         {
@@ -88,7 +84,7 @@ namespace TileIconifier.Core.Shortcut
                 applyAllFiles(pathToScan, f =>
                 {
                     var extension = Path.GetExtension(f);
-                    if (extension != null && !extension.Equals(".lnk", StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrEmpty(extension) && !extension.Equals(".lnk", StringComparison.OrdinalIgnoreCase))
                         return;
 
                     var shortcutItem = new ShortcutItem(f);
@@ -104,21 +100,21 @@ namespace TileIconifier.Core.Shortcut
             return _shortcutsCache;
         }
 
-        public static List<ShortcutItem> TryGetShortcutsWithPinning(out Exception pinnedInformationException,
-            bool refreshCache = false)
-        {
-            GetShortcuts(refreshCache);
-            try
-            {
-                GetPinnedStartMenuInformation();
-                pinnedInformationException = null;
-            }
-            catch (Exception ex)
-            {
-                pinnedInformationException = ex;
-            }
-            return _shortcutsCache;
-        }
+        // public static List<ShortcutItem> TryGetShortcutsWithPinning(out Exception pinnedInformationException,
+        //     bool refreshCache = false)
+        // {
+        //     GetShortcuts(refreshCache);
+        //     try
+        //     {
+        //         GetPinnedStartMenuInformation();
+        //         pinnedInformationException = null;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         pinnedInformationException = ex;
+        //     }
+        //     return _shortcutsCache;
+        // }
 
         public static List<DesktopApplicationTileRegexInfo> GrabRegexInfoFromXml(string startLayout)
         {
@@ -155,7 +151,7 @@ namespace TileIconifier.Core.Shortcut
 
             MarkPinnedShortcuts(tempFilePath);
 
-            _shortcutsCache = _shortcutsCache.ToList();
+            _shortcutsCache = _shortcutsCache?.ToList();
 
             try
             {
@@ -174,15 +170,19 @@ namespace TileIconifier.Core.Shortcut
             var regexStrippedDesktopApplicationTiles =
                 GrabRegexInfoFromXml(startLayout);
 
-            foreach (var shortcutItem in _shortcutsCache)
-                shortcutItem.IsPinned = false;
+            if (_shortcutsCache is not null)
+            {
+                foreach (var shortcutItem in _shortcutsCache)
+                    shortcutItem.IsPinned = false;
+            }
 
             foreach (var regexStrippedDesktopApplicationTile in regexStrippedDesktopApplicationTiles)
             {
                 try
                 {
+                    if (_shortcutsCache is null) throw new NullReferenceException(nameof(_shortcutsCache));
                     var shortcutMatch = regexStrippedDesktopApplicationTile.FindShortcutMatch(_shortcutsCache);
-                    if (shortcutMatch != null)
+                    if (shortcutMatch is not null)
                         shortcutMatch.IsPinned = true;
                 }
                 catch
@@ -194,14 +194,15 @@ namespace TileIconifier.Core.Shortcut
 
         public class DesktopApplicationTileRegexInfo
         {
-            public string DesktopApplicationId { get; set; }
-            public string DesktopApplicationLinkPath { get; set; }
+            public string? DesktopApplicationId { get; set; }
+            public string? DesktopApplicationLinkPath { get; set; }
 
             public bool IsValid
                 => !string.IsNullOrEmpty(DesktopApplicationId) || !string.IsNullOrEmpty(DesktopApplicationLinkPath);
 
-            public ShortcutItem FindShortcutMatch(List<ShortcutItem> shortcutsCache)
+            public ShortcutItem? FindShortcutMatch(List<ShortcutItem>? shortcutsCache)
             {
+                if (shortcutsCache is null || _shortcutsCache is null) return null;
                 var matchingShortcutItems = new List<ShortcutItem>();
 
                 //add any items where the Link paths match

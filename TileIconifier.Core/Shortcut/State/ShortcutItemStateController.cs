@@ -27,8 +27,6 @@
 
 #endregion
 
-using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 using TileIconifier.Core.Utilities;
 
@@ -36,6 +34,7 @@ namespace TileIconifier.Core.Shortcut.State
 {
     public class ShortcutItemStateController
     {
+        // This class lack proper constructor...
         private ShortcutItemState OldState { get; set; }
         public ShortcutItemState CurrentState { get; set; }
 
@@ -46,13 +45,13 @@ namespace TileIconifier.Core.Shortcut.State
         public void SaveMediumIconMetadata(string filePath)
         {
             IoUtils.ForceDelete(filePath);
-            CurrentState.MediumImage.Save(filePath);
+            CurrentState.MediumImage?.Save(filePath);
         }
 
         public void SaveSmallIconMetadata(string filePath)
         {
             IoUtils.ForceDelete(filePath);
-            CurrentState.SmallImage.Save(filePath);
+            CurrentState.SmallImage?.Save(filePath);
         }
 
         public void UndoChanges()
@@ -89,8 +88,8 @@ namespace TileIconifier.Core.Shortcut.State
 
                 try
                 {
-                    ShortcutItemImage mediumImage = null;
-                    ShortcutItemImage smallImage = null;
+                    ShortcutItemImage? mediumImage = null;
+                    ShortcutItemImage? smallImage = null;
                     if (File.Exists(mediumImageResizeMetadataPath))
                     {
                         mediumImage = ShortcutItemImage.Load(mediumImageResizeMetadataPath);
@@ -103,10 +102,10 @@ namespace TileIconifier.Core.Shortcut.State
                     var parameters = from b in xmlDoc.Descendants("VisualElements")
                                      select new ShortcutItemState
                                      {
-                                         TileIconifierMetadataCreatedWithUpgrade = b.Attribute("TileIconifierCreatedWithUpgrade")?.Value,
-                                         TileIconifierMetadataColorSelection = b.Attribute("TileIconifierColorSelection")?.Value,
-                                         BackgroundColor = b.Attribute("BackgroundColor")?.Value,
-                                         ForegroundText = b.Attribute("ForegroundText")?.Value,
+                                         TileIconifierMetadataCreatedWithUpgrade = b.Attribute("TileIconifierCreatedWithUpgrade")?.Value ?? string.Empty,
+                                         TileIconifierMetadataColorSelection = b.Attribute("TileIconifierColorSelection")?.Value ?? string.Empty,
+                                         BackgroundColor = b.Attribute("BackgroundColor")?.Value ?? string.Empty,
+                                         ForegroundText = b.Attribute("ForegroundText")?.Value ?? string.Empty,
                                          ShowNameOnSquare150X150Logo = b.Attribute("ShowNameOnSquare150x150Logo")?.Value == "on",
                                          MediumImage =
                                              mediumImage ?? new ShortcutItemImage(ShortcutConstantsAndEnums.MediumShortcutOutputSize)

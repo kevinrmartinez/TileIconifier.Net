@@ -28,11 +28,7 @@
 #endregion
 
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using TileIconifier.Core.Utilities;
@@ -65,12 +61,12 @@ namespace TileIconifier.Core.Custom.WindowsStoreShellMethod
                                          appPackageSubKey.GetSubKeyNames()
                                              .Any(s => string.Equals(s, "application", StringComparison.InvariantCultureIgnoreCase))
                                      let appPackageApplicationKey =
-                                         (string)appPackageSubKey.OpenSubKey("Application")?.GetValue("AppUserModelID")
+                                         (string)appPackageSubKey.OpenSubKey("Application")?.GetValue("AppUserModelID")!
                                      let appPackageIconPath =
-                                         GetIconPath((string)appPackageSubKey.OpenSubKey("Application")?.GetValue("ApplicationIcon"))
+                                         GetIconPath((string?)appPackageSubKey.OpenSubKey("Application")?.GetValue("ApplicationIcon"))
                                      let appPackageDisplayName = appPackageSubKey.GetValueNames().Contains("FriendlyTypeName")
-                                         ? GetDisplayName((string)appPackageSubKey.GetValue("FriendlyTypeName"))
-                                         : (string)appPackageSubKey.GetValue(null)
+                                         ? GetDisplayName((string)appPackageSubKey.GetValue("FriendlyTypeName")!)
+                                         : (string?)appPackageSubKey.GetValue(null)
                                      where !string.IsNullOrEmpty(appPackageDisplayName) && !string.IsNullOrEmpty(appPackageApplicationKey)
                                      select new WindowsStoreApp(appPackageDisplayName, appPackageIconPath, appPackageApplicationKey)
                 into storeApp
@@ -107,8 +103,8 @@ namespace TileIconifier.Core.Custom.WindowsStoreShellMethod
                                          where subKeys.Any()
                                          let workingKey = activatableClassIdKey.OpenSubKey(subKeys[0])
                                          where workingKey != null
-                                         let iconPath = GetIconPath((string)workingKey.GetValue("Icon"))
-                                         let displayName = GetDisplayName((string)workingKey.GetValue("DisplayName"))
+                                         let iconPath = GetIconPath((string?)workingKey.GetValue("Icon"))
+                                         let displayName = GetDisplayName((string)workingKey.GetValue("DisplayName")!)
                                          let executionPath = GetExecutionPathFromName(appPackage) + "!" + subKeys[0]
                                          where !string.IsNullOrEmpty(executionPath) && !string.IsNullOrEmpty(displayName)
                                          select new WindowsStoreApp(displayName, iconPath, executionPath)
@@ -128,8 +124,10 @@ namespace TileIconifier.Core.Custom.WindowsStoreShellMethod
             return stringOut.ToString();
         }
 
-        private static string GetIconPath(string iconTag)
+        private static string GetIconPath(string? iconTag)
         {
+            if (iconTag is null) return string.Empty;
+            
             //this is a somewhat hit and miss method... get the highest resolution icon with the file name and in the folder specified.
             //TODO: improve this...
 
@@ -159,8 +157,8 @@ namespace TileIconifier.Core.Custom.WindowsStoreShellMethod
                 if (folderPaths.Length == 0)
                     return string.Empty;
 
-                FileInfo largestLogoPath = null;
-                Image largestLogoImage = null;
+                FileInfo? largestLogoPath = null;
+                Image? largestLogoImage = null;
 
                 foreach (var folderPath in folderPaths)
                 {
@@ -188,7 +186,7 @@ namespace TileIconifier.Core.Custom.WindowsStoreShellMethod
                                     if (image.Width * image.Height > largestLogoImage?.Width * largestLogoImage?.Height)
                                     {
                                         largestLogoPath = logoFile;
-                                        largestLogoImage.Dispose();
+                                        largestLogoImage?.Dispose();
                                         largestLogoImage = (Image)image.Clone();
                                     }
                                 }

@@ -27,10 +27,6 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using TileIconifier.Core.Shortcut;
 
 namespace TileIconifier.Core.Custom.Steam
@@ -43,10 +39,10 @@ namespace TileIconifier.Core.Custom.Steam
             Environment.ExpandEnvironmentVariables(@"%programfiles%\Steam\")
         };
 
-        private readonly List<string> _steamLibraryFolders = new List<string>();
-        private string _steamExecutablePath;
-        private string _steamInstallationFolderPath;
-        private ShortcutItem _steamShortcutItem;
+        private readonly List<string> _steamLibraryFolders = [];
+        private string? _steamExecutablePath;
+        private string? _steamInstallationFolderPath;
+        private ShortcutItem? _steamShortcutItem;
 
         private SteamLibrary()
         {
@@ -54,13 +50,8 @@ namespace TileIconifier.Core.Custom.Steam
 
         public static SteamLibrary Instance { get; } = new SteamLibrary();
 
-        public ShortcutItem SteamShortcutItem => _steamShortcutItem ??
-                                                 (_steamShortcutItem =
-                                                     ShortcutItemEnumeration.GetShortcuts()
-                                                         .FirstOrDefault(
-                                                             s =>
-                                                                 Path.GetFileNameWithoutExtension(
-                                                                     s.ShortcutFileInfo.Name) == "Steam"));
+        public ShortcutItem? SteamShortcutItem => _steamShortcutItem ??= ShortcutItemEnumeration.GetShortcuts()
+            .FirstOrDefault(s => Path.GetFileNameWithoutExtension(s.ShortcutFileInfo.Name) == "Steam");
 
         public string GetSteamInstallationFolder()
         {
@@ -109,7 +100,7 @@ namespace TileIconifier.Core.Custom.Steam
             {
                 try
                 {
-                    var libraryFolder = keyValuePair.Value.Replace(@"\\", @"\") + "\\";
+                    var libraryFolder = keyValuePair.Value?.Replace(@"\\", @"\") + "\\";
                     AddLibraryFolder(libraryFolder);
                 }
                 catch (SteamLibraryPathNotFoundException)
@@ -153,9 +144,10 @@ namespace TileIconifier.Core.Custom.Steam
                         continue;
                     var appId =
                         kv.KeyNameValues.Single(
-                            k => k.Key.Equals("appid", StringComparison.InvariantCultureIgnoreCase)).Value;
+                            k => !string.IsNullOrEmpty(k.Key) 
+                                 && k.Key.Equals("appid", StringComparison.InvariantCultureIgnoreCase)).Value;
                     var gameName = GetGameName(kv);
-                    if (gameName == null)
+                    if (appId is null || gameName is null)
                         continue;
                     steamGames.Add(new SteamGame(appId, gameName, acfFile.FullName));
                 }
@@ -187,7 +179,7 @@ namespace TileIconifier.Core.Custom.Steam
 
             if (SteamShortcutItem != null)
             {
-                return SteamShortcutItem.TargetInfo.FilePath;
+                if (SteamShortcutItem.TargetInfo.FilePath is { } filePath) return filePath;
             }
             var assumedSteamExePath = _steamInstallationFolderPath + "Steam.exe";
             if (File.Exists(assumedSteamExePath))
@@ -213,20 +205,21 @@ namespace TileIconifier.Core.Custom.Steam
             return assumedVdfPath;
         }
 
-        private static string GetGameName(KeyValues.KeyValues kv)
+        private static string? GetGameName(KeyValues.KeyValues kv)
         {
             while (true)
             {
                 var kvp =
                     kv.KeyNameValues.FirstOrDefault(
-                        k => k.Key.Equals("name", StringComparison.InvariantCultureIgnoreCase));
-                if (kvp != null)
+                        k => !string.IsNullOrEmpty(k.Key) 
+                             && k.Key.Equals("name", StringComparison.InvariantCultureIgnoreCase));
+                if (kvp is not null)
                     return kvp.Value;
 
                 var userConfigKv =
                     kv.KeyChilds.FirstOrDefault(
                         c => c.Name.Equals("UserConfig", StringComparison.InvariantCultureIgnoreCase));
-                if (userConfigKv == null) return null;
+                if (userConfigKv is null) return null;
                 kv = userConfigKv;
             }
         }

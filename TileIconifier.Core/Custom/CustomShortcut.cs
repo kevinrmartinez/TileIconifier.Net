@@ -27,8 +27,6 @@
 
 #endregion
 
-using System;
-using System.IO;
 using System.Text.RegularExpressions;
 using TileIconifier.Core.Shortcut;
 using TileIconifier.Core.Utilities;
@@ -74,7 +72,7 @@ namespace TileIconifier.Core.Custom
         }
 
         public ShortcutItem ShortcutItem { get; internal set; }
-        public string VbsFilePath { get; internal set; }
+        public string VbsFilePath { get; internal set; } = string.Empty;
         public string VbsFolderPath { get; internal set; }
         public string ShortcutName { get; internal set; }
         public string TargetPath { get; internal set; }

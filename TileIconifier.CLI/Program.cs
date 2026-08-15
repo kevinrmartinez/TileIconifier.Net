@@ -23,16 +23,16 @@ class Program
         };
         Option<string[]> shortcutArguments = new("--arguments", "-a") {
             Description = "Arguments for the shortcut",
-            DefaultValueFactory = parsing => [],
+            DefaultValueFactory = _ => [],
             Arity = ArgumentArity.ZeroOrMore
         };
         Option<bool> forAllUsers = new("--all-users") {
             Description = "Create the shortcut for all users",
-            DefaultValueFactory = parsing => false
+            DefaultValueFactory = _ => false
         };
         Option<FileInfo?> shortcutIcon = new("--icon", "-i") {
             Description = "Path of the shortcut's icon",
-            DefaultValueFactory = parsing => null
+            DefaultValueFactory = _ => null
         };
         Command customShortcut = new("custom", "Creates a custom shortcut")
         {
@@ -90,8 +90,10 @@ class Program
         var newShortcutItem = customShortcut.ShortcutItem;
         if (!string.IsNullOrEmpty(shortcutParams.IconPath)) {
             var iconBytes = Core.Utilities.ImageUtils.LoadFileToByteArray(shortcutParams.IconPath);
-            newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
-            newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
+            if (iconBytes is not null) {
+                newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
+                newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
+            }
         }
         
         var iconify = new TileIcon(newShortcutItem);

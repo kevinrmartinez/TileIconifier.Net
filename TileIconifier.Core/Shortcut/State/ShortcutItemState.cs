@@ -27,7 +27,6 @@
 
 #endregion
 
-using System;
 using System.Drawing;
 using TileIconifier.Core.Enums;
 
@@ -35,7 +34,7 @@ namespace TileIconifier.Core.Shortcut.State
 {
     public class ShortcutItemState : IEquatable<ShortcutItemState>
     {
-        private string _showNameOnSquare150X150Logo;
+        private string? _showNameOnSquare150X150Logo;
 
         public ShortcutItemState()
         {
@@ -44,8 +43,8 @@ namespace TileIconifier.Core.Shortcut.State
         }
 
         public bool UseSystemAccentColor { get; set; }
-        public string BackgroundColor { get; set; }
-        public string ForegroundText { get; set; }
+        public required string BackgroundColor { get; set; }
+        public required string ForegroundText { get; set; }
         public ShortcutItemImage MediumImage { get; set; }
         public ShortcutItemImage SmallImage { get; set; }
 
@@ -77,10 +76,10 @@ namespace TileIconifier.Core.Shortcut.State
             }
         }
 
-        internal string TileIconifierMetadataColorSelection { get; set; }
-        internal string TileIconifierMetadataCreatedWithUpgrade { get; set; }
+        internal string TileIconifierMetadataColorSelection { get; set; } = string.Empty;
+        internal string TileIconifierMetadataCreatedWithUpgrade { get; set; } = string.Empty;
 
-        public bool Equals(ShortcutItemState other)
+        public bool Equals(ShortcutItemState? other)
         {
             if (ReferenceEquals(this, other))
                 return true;
@@ -115,24 +114,20 @@ namespace TileIconifier.Core.Shortcut.State
                 ForegroundText = ForegroundText,
                 ShowNameOnSquare150X150Logo = ShowNameOnSquare150X150Logo,
                 UseSystemAccentColor = UseSystemAccentColor,
-                MediumImage = MediumImage != null
-                    ? new ShortcutItemImage(new Size(MediumImage.Width, MediumImage.Height))
+                MediumImage = new ShortcutItemImage(new Size(MediumImage.Width, MediumImage.Height))
                     {
                         Bytes = MediumImage.Bytes,
                         X = MediumImage.X,
                         Y = MediumImage.Y,
                         Path = MediumImage.Path
-                    }
-                    : new ShortcutItemImage(ShortcutConstantsAndEnums.MediumShortcutOutputSize),
-                SmallImage = SmallImage != null
-                    ? new ShortcutItemImage(new Size(SmallImage.Width, SmallImage.Height))
+                    },
+                SmallImage = new ShortcutItemImage(new Size(SmallImage.Width, SmallImage.Height))
                     {
                         Bytes = SmallImage.Bytes,
                         X = SmallImage.X,
                         Y = SmallImage.Y,
                         Path = SmallImage.Path
                     }
-                    : new ShortcutItemImage(ShortcutConstantsAndEnums.SmallShortcutOutputSize)
             };
         }
     }

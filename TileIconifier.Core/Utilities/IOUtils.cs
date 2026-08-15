@@ -27,9 +27,6 @@
 
 #endregion
 
-using System;
-using System.IO;
-
 namespace TileIconifier.Core.Utilities
 {
     internal class IoUtils
