@@ -49,13 +49,14 @@ namespace TileIconifier.Controls.IconifierPanel.PictureBox
         [Browsable(false)]
         public PannablePictureBox PannablePictureBox => panPct;
 
-        [Localizable(true)]
+        [Localizable(true)][DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string HeaderText
         {
             get { return lblHeader.Text; }
             set { lblHeader.Text = value; }
         }
         
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Size ImagePictureBoxOutputSize
         {
             get { return panPct.OutputSize; }

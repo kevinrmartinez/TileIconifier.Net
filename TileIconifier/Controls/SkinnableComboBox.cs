@@ -34,6 +34,7 @@ namespace TileIconifier.Controls
         //There is no event for when this properties is changed,
         //so we need to reimplement it to allow us to do stuff when it is changed.
         //Not ideal since this could be bypassed. Will think about this...
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public new FlatStyle FlatStyle
         {
             get { return base.FlatStyle; }

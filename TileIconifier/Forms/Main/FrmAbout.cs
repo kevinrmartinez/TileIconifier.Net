@@ -49,7 +49,8 @@ namespace TileIconifier.Forms.Main
         {
             var updateCurVer =
                 new Action<Control>(
-                    control => control.Text = control.Text.Replace("[@@CURVER@@]", UpdateUtils.CurrentVersion));
+                    control => control.Text = control.Text.Replace("[@@CURVER@@]", Program.FixedVersion));   // Version will be a fixed string, for now 
+                    // control => control.Text = control.Text.Replace("[@@CURVER@@]", UpdateUtils.CurrentVersion));
             updateCurVer(rtxtAbout);
             updateCurVer(lblVersion);
         }

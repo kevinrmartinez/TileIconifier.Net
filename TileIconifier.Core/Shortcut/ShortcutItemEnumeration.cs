@@ -100,21 +100,21 @@ namespace TileIconifier.Core.Shortcut
             return _shortcutsCache;
         }
 
-        // public static List<ShortcutItem> TryGetShortcutsWithPinning(out Exception pinnedInformationException,
-        //     bool refreshCache = false)
-        // {
-        //     GetShortcuts(refreshCache);
-        //     try
-        //     {
-        //         GetPinnedStartMenuInformation();
-        //         pinnedInformationException = null;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         pinnedInformationException = ex;
-        //     }
-        //     return _shortcutsCache;
-        // }
+        public static List<ShortcutItem>? TryGetShortcutsWithPinning(out Exception? pinnedInformationException,
+            bool refreshCache = false)
+        {
+            GetShortcuts(refreshCache);
+            try
+            {
+                GetPinnedStartMenuInformation();
+                pinnedInformationException = null;
+            }
+            catch (Exception ex)
+            {
+                pinnedInformationException = ex;
+            }
+            return _shortcutsCache;
+        }
 
         public static List<DesktopApplicationTileRegexInfo> GrabRegexInfoFromXml(string startLayout)
         {

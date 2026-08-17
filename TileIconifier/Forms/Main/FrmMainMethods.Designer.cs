@@ -240,6 +240,8 @@ namespace TileIconifier.Forms.Main
 
         private static async void CheckForUpdates(bool silentIfNoUpdateDetected)
         {
+            // Disabled because I don't want to deal with this :v
+            /*
             try
             {
                 var updateDetails = await UpdateUtils.CheckForUpdate();
@@ -281,7 +283,7 @@ namespace TileIconifier.Forms.Main
                 {
                     UrlUtils.OpenUrlInBrowser("https://github.com/Jonno12345/TileIconifier/releases");
                 }
-            }
+            */
         }
 
         private void UpdateFilteredList(bool resetTextBox = false)

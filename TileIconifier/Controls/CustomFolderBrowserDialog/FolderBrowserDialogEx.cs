@@ -344,6 +344,7 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         /// <summary>
         /// This description appears near the top of the dialog box, providing direction to the user.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string Description
         {
             get
@@ -357,6 +358,7 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         }
 
         //[Localizable(false), SRCategory("CatFolderBrowsing"), SRDescription("FolderBrowserDialogRootFolder"), TypeConverter(typeof(SpecialFolderEnumConverter)), Browsable(true), DefaultValue(0)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)] // Since .NET 9, this has to be specified apparently
         public Environment.SpecialFolder RootFolder
         {
             get
@@ -378,6 +380,7 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         /// <summary>
         /// Set or get the selected path.  
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string SelectedPath
         {
             get
@@ -401,6 +404,7 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         /// <summary>
         /// Enable or disable the "New Folder" button in the browser dialog.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowNewFolderButton
         {
             get
@@ -421,6 +425,7 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         /// The user may also type a pathname directly into the edit box.  
         /// </remarks>
         /// <seealso cref="ShowFullPathInEditBox"/>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowEditBox
         {
             get
@@ -439,6 +444,7 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         /// <remarks>
         /// The new style is resizable and includes a "New Folder" button.
         /// </remarks>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool NewStyle
         {
             get
@@ -452,6 +458,7 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         }
 
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool DontIncludeNetworkFoldersBelowDomainLevel
         {
             get { return _dontIncludeNetworkFoldersBelowDomainLevel; }
@@ -464,12 +471,14 @@ namespace TileIconifier.Controls.CustomFolderBrowserDialog
         /// <remarks>
         /// This works only if ShowEditBox is also set to true. 
         /// </remarks>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowFullPathInEditBox
         {
             get { return _showFullPathInEditBox; }
             set { _showFullPathInEditBox = value; }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowBothFilesAndFolders
         {
             get { return _showBothFilesAndFolders; }

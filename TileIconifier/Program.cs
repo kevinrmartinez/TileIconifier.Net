@@ -44,6 +44,8 @@ namespace TileIconifier
 {
     internal static class Program
     {
+        public const string FixedVersion = "3.1.2";
+        
         private static bool _doNotExit = true;
         private static FrmMain _fm;
 

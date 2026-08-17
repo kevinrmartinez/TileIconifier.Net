@@ -45,8 +45,8 @@ namespace TileIconifier.Forms.Shared
 
         private string ExceptionString
             =>
-                $@"TileIconifier Version: v{UpdateUtils.CurrentVersion} - {(Environment.Is64BitProcess ? @"x64" : "x86")
-                    }
+                $@"TileIconifier Version: v{Program.FixedVersion} - {(Environment.Is64BitProcess ? @"x64" : "x86")
+                }
 OS Version: {Environment.OSVersion.Version} - {
                     (Environment.Is64BitOperatingSystem ? @"x64" : "x86")}
 Administrator?: {(SystemUtils.IsAdministrator() ? "Yes" : "No")}

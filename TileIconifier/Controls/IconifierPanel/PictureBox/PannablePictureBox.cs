@@ -34,6 +34,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using TileIconifier.Skinning;
 using TileIconifier.Utilities;
+using Timer = System.Windows.Forms.Timer;
 
 namespace TileIconifier.Controls.IconifierPanel.PictureBox
 {

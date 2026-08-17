@@ -59,6 +59,7 @@ namespace TileIconifier.Core.IconExtractor
         /// <returns>An array of System.Drawing.Icon.</returns>
         public static Icon[] Split(Icon icon)
         {
+            // TODO: broken
             if (icon == null)
                 throw new ArgumentNullException(nameof(icon));
 
