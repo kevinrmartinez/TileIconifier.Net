@@ -1,5 +1,4 @@
 ﻿using System.CommandLine;
-using System.CommandLine.Invocation;
 using TileIconifier.Core.Custom;
 using TileIconifier.Core.Custom.Builder;
 using TileIconifier.Core.Shortcut;
@@ -21,7 +20,15 @@ class Program
 
     #region ParserSetUp
     
-    private enum NameOnTile { Off, Light, Dark }
+    // TileIconifier/Forms/Shared/FrmIconSelector.cs:86
+    private static readonly List<string> _supportedImageFileTypes = [
+        ".jpeg",
+        ".jpg",
+        ".png",
+        ".bmp"
+    ];
+    
+    private enum NameOnTile { off, light, dark }
     
     // Options
     // Create Shortcut
@@ -80,9 +87,9 @@ class Program
         
         customShortcut.SetAction(parseResult =>
         {
-            var nameOnTile = NameOnTile.Off;
-            if (parseResult.GetValue(OptNameOnTileLight)) nameOnTile = NameOnTile.Light;
-            if (parseResult.GetValue(OptNameOnTileDark)) nameOnTile = NameOnTile.Dark;
+            var nameOnTile = NameOnTile.off;
+            if (parseResult.GetValue(OptNameOnTileLight)) nameOnTile = NameOnTile.light;
+            if (parseResult.GetValue(OptNameOnTileDark)) nameOnTile = NameOnTile.dark;
             CreateCustomShortcut(
                 parseResult.GetValue(OptShortcutName)!,
                 parseResult.GetValue(OptShortcutTarget)!,
@@ -110,9 +117,9 @@ class Program
         };
         customTestShortcut.SetAction(parseResult =>
         {
-            var nameOnTile = NameOnTile.Off;
-            if (parseResult.GetValue(OptNameOnTileLight)) nameOnTile = NameOnTile.Light;
-            if (parseResult.GetValue(OptNameOnTileDark)) nameOnTile = NameOnTile.Dark;
+            var nameOnTile = NameOnTile.off;
+            if (parseResult.GetValue(OptNameOnTileLight)) nameOnTile = NameOnTile.light;
+            if (parseResult.GetValue(OptNameOnTileDark)) nameOnTile = NameOnTile.dark;
             TestCustomShortcutOptions(
                 parseResult.GetValue(OptShortcutName)!,
                 parseResult.GetValue(OptShortcutTarget)!,
@@ -131,6 +138,22 @@ class Program
         return createCommand;
     }
 
+    private static Command GetCheckSubcommand()
+    {
+        Command checkCommand = new Command("check", "Checks a shortcut") { };
+        
+        // End Setup
+        return checkCommand;
+    }
+    
+    private static Command GetDeleteSubcommand()
+    {
+        Command deleteCommand = new Command("delete", "Deletes an existing shortcut") { };
+        // TileIconifier/Forms/CustomShortcutForms/FrmCustomShortcutManagerMain.cs:143
+        // End Setup
+        return deleteCommand;
+    }
+
     private static RootCommand GetRootCommand()
     {
         /*
@@ -139,7 +162,9 @@ class Program
          * maybe call those options from CreateCustomShortcut
          */
         RootCommand rootCommand = new("Command Line Interface for TileIconifier") {
-            GetCreateSubcommand()
+            GetCreateSubcommand(),
+            GetCheckSubcommand(),
+            GetDeleteSubcommand()
         };
         // rootCommand.Subcommands.Add(GetCreateSubcommand());
 
@@ -165,23 +190,31 @@ class Program
         var shortcutBuilder = new OtherCustomShortcutBuilder(shortcutParams);
         var customShortcut = shortcutBuilder.GenerateCustomShortcut(shortcutName);
         var newShortcutItem = customShortcut.ShortcutItem;
-        newShortcutItem.Properties.CurrentState.ShowNameOnSquare150X150Logo = true;
-        if (!string.IsNullOrEmpty(shortcutParams.IconPath)) {
+        newShortcutItem.Properties.CurrentState.ShowNameOnSquare150X150Logo = nameOnTile switch {
+            NameOnTile.off => false,
+            _ => true
+        };
+        // TileIconifier/Controls/IconifierPanel/ColorPanel.cs
+        newShortcutItem.Properties.CurrentState.ForegroundText = nameOnTile switch {
+            NameOnTile.dark => NameOnTile.dark.ToString("G"),
+            _ => NameOnTile.light.ToString("G")
+        };
+        if (shortcutTileImage is not null) {
             /*
              * If the icon is missing: the shortcut will use the executable, but the tile will be empty
              * If the icon is not an .ico: the shortcut will have an invalid icon, but the tile should show it correctly
-             *
-             * TODO:
-             * This segment allow us to handle two icons: an .ico for 'shortcutParams.IconPath', and an image file for 'iconBytes'
-             * and RetroLinker can serve us both!
              */
-            var iconBytes = Core.Utilities.ImageUtils.LoadFileToByteArray(shortcutParams.IconPath);
-            if (iconBytes is not null) {
-                newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
-                newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
+            if (shortcutTileImage.Exists && _supportedImageFileTypes.Contains(shortcutTileImage.Extension))
+            {
+                var iconBytes = Core.Utilities.ImageUtils.LoadFileToByteArray(shortcutTileImage.FullName);
+                if (iconBytes is not null) {
+                    newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
+                    newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
+                }
             }
         }
         
+        newShortcutItem.Properties.CommitChanges();
         var iconify = new TileIcon(newShortcutItem);
         iconify.RunIconify();
     }
