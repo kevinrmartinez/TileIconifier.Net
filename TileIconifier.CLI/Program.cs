@@ -6,14 +6,18 @@ using TileIconifier.Core.TileIconify;
 
 namespace TileIconifier.CLI;
 
-class Program
+internal static class Program
 {
     static int Main(string[] args)
     {
         // Console.WriteLine("Hello, World!");
         
-        // Requieres admin when installing for all users 
-
+        // Requieres admin when installing for all users
+#if REMOTE
+        Console.WriteLine("Press any key when ready...");
+        Console.ReadKey();
+#endif
+        
         var rootCommand = GetRootCommand();
         return rootCommand.Parse(args).Invoke();
     }
@@ -199,18 +203,13 @@ class Program
             NameOnTile.dark => NameOnTile.dark.ToString("G"),
             _ => NameOnTile.light.ToString("G")
         };
-        if (shortcutTileImage is not null) {
-            /*
-             * If the icon is missing: the shortcut will use the executable, but the tile will be empty
-             * If the icon is not an .ico: the shortcut will have an invalid icon, but the tile should show it correctly
-             */
-            if (shortcutTileImage.Exists && _supportedImageFileTypes.Contains(shortcutTileImage.Extension))
-            {
-                var iconBytes = Core.Utilities.ImageUtils.LoadFileToByteArray(shortcutTileImage.FullName);
-                if (iconBytes is not null) {
-                    newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
-                    newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
-                }
+        
+        if ((shortcutTileImage is { Exists: true }) && _supportedImageFileTypes.Contains(shortcutTileImage.Extension))
+        {
+            var iconBytes = Core.Utilities.ImageUtils.LoadFileToByteArray(shortcutTileImage.FullName);
+            if (iconBytes is not null) {
+                newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
+                newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
             }
         }
         
@@ -249,6 +248,11 @@ class Program
         else imagePrint = "[NULL]";
         Console.WriteLine(imagePrint);
         Console.WriteLine(nameOnTile.ToString("G"));
+        
+#if REMOTE
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
+#endif
     }
 
     #endregion

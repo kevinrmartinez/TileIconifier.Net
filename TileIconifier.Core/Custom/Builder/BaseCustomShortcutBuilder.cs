@@ -57,11 +57,7 @@ namespace TileIconifier.Core.Custom.Builder
                     Parameters.ShortcutRootPath,
                     Parameters.IconPath);
 
-            if (string.IsNullOrEmpty(Parameters.IconPath))
-                Build(customShortcut, Parameters.Image);
-            else
-                Build(customShortcut);
-
+            Build(customShortcut, Parameters.Image);
             return customShortcut;
         }
 
