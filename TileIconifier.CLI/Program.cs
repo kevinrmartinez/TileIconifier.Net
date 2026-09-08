@@ -34,19 +34,19 @@ internal static class Program
     
     private enum NameOnTile { off, light, dark }
     
-    // Options
-    // Create Shortcut
+    // == Options ==
     private static readonly Option<string> OptShortcutName = new("--name", "-n") {
         Description = "Name of the shortcut",
         Required = true
     };
+    
+    // Create Shortcut
     private static readonly Option<FileInfo> OptShortcutTarget = new("--target", "-t") {
         Description = "Path of the shortcut's target",
         Required =  true
     };
-    private static readonly Option<string[]> OptShortcutArguments = new("--arguments", "-a") {
+    private static readonly Option<string[]?> OptShortcutArguments = new("--arguments", "-a") {
         Description = "Arguments for the shortcut",
-        DefaultValueFactory = _ => [],
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true
     };
@@ -95,9 +95,9 @@ internal static class Program
             if (parseResult.GetValue(OptNameOnTileLight)) nameOnTile = NameOnTile.light;
             if (parseResult.GetValue(OptNameOnTileDark)) nameOnTile = NameOnTile.dark;
             CreateCustomShortcut(
-                parseResult.GetValue(OptShortcutName)!,
-                parseResult.GetValue(OptShortcutTarget)!,
-                parseResult.GetValue(OptShortcutArguments)!,
+                parseResult.GetRequiredValue(OptShortcutName),
+                parseResult.GetRequiredValue(OptShortcutTarget),
+                parseResult.GetValue(OptShortcutArguments),
                 parseResult.GetValue(OptForAllUsers),
                 parseResult.GetValue(OptShortcutIcon),
                 parseResult.GetValue(OptShortcutTileImage),
@@ -108,7 +108,7 @@ internal static class Program
         createCommand.Add(customShortcut);
 
 #if DEBUG
-        Command customTestShortcut = new("custom-test", "Tests a custom shortcut")
+        Command customTestShortcut = new("custom-test", "Tests the 'create custom' command")
         {
             OptShortcutName,
             OptShortcutTarget,
@@ -124,10 +124,10 @@ internal static class Program
             var nameOnTile = NameOnTile.off;
             if (parseResult.GetValue(OptNameOnTileLight)) nameOnTile = NameOnTile.light;
             if (parseResult.GetValue(OptNameOnTileDark)) nameOnTile = NameOnTile.dark;
-            TestCustomShortcutOptions(
-                parseResult.GetValue(OptShortcutName)!,
-                parseResult.GetValue(OptShortcutTarget)!,
-                parseResult.GetValue(OptShortcutArguments)!,
+            CreateCustomShortcut_Test(
+                parseResult.GetRequiredValue(OptShortcutName),
+                parseResult.GetRequiredValue(OptShortcutTarget),
+                parseResult.GetValue(OptShortcutArguments),
                 parseResult.GetValue(OptForAllUsers),
                 parseResult.GetValue(OptShortcutIcon),
                 parseResult.GetValue(OptShortcutTileImage),
@@ -144,7 +144,7 @@ internal static class Program
 
     private static Command GetCheckSubcommand()
     {
-        Command checkCommand = new Command("check", "Checks a shortcut") { };
+        Command checkCommand = new Command("check", "Checks a shortcut");
         
         // End Setup
         return checkCommand;
@@ -152,19 +152,27 @@ internal static class Program
     
     private static Command GetDeleteSubcommand()
     {
-        Command deleteCommand = new Command("delete", "Deletes an existing shortcut") { };
-        // TileIconifier/Forms/CustomShortcutForms/FrmCustomShortcutManagerMain.cs:143
+        Command deleteCommand = new Command("delete", "Deletes an existing shortcut");
+        Command customShortcut = new Command("custom", "Deletes a custom shortcut") {
+            OptShortcutName
+        };
+        customShortcut.SetAction(result => DeleteCustomShortcut(result.GetRequiredValue(OptShortcutName)));
+        deleteCommand.Add(customShortcut);
+
+#if DEBUG
+        Command testCustomShortcut = new Command("custom-test", "Tests the 'deletes custom' command") {
+            OptShortcutName
+        };
+        testCustomShortcut.SetAction(result => DeleteCustomShortcut_Test(result.GetRequiredValue(OptShortcutName)));
+        deleteCommand.Add(testCustomShortcut);
+#endif
+        
         // End Setup
         return deleteCommand;
     }
 
     private static RootCommand GetRootCommand()
     {
-        /*
-         * TileIconifier can handle shortcuts with the same name by appending _n, where n is an incremental number
-         * TODO: give an option to check if a shortcut exist, and another to delete it (filtering by name);
-         * maybe call those options from CreateCustomShortcut
-         */
         RootCommand rootCommand = new("Command Line Interface for TileIconifier") {
             GetCreateSubcommand(),
             GetCheckSubcommand(),
@@ -179,13 +187,14 @@ internal static class Program
 
     #region CreateFunctions
 
-    private static void CreateCustomShortcut(string shortcutName, FileInfo shortcutTarget, string[] shortcutArguments,  
+    private static void CreateCustomShortcut(string shortcutName, FileInfo shortcutTarget, string[]? shortcutArguments,  
         bool forAllUsers, FileInfo? shortcutIcon, FileInfo? shortcutTileImage, NameOnTile nameOnTile)
     {
+        // TileIconifier.Core can handle shortcuts with the same name by appending _n, where n is an incremental number
         var rootPath = (!forAllUsers) 
             ? CustomShortcutGetters.CustomShortcutCurrentUserPath 
             : CustomShortcutGetters.CustomShortcutAllUsersPath;
-        var arguments = string.Join(" ", shortcutArguments);
+        var arguments = (shortcutArguments is not null) ? string.Join(" ", shortcutArguments) : string.Empty;
         arguments = arguments.TrimEnd();
         var shortcutParams = new GenerateCustomShortcutParams(shortcutTarget.FullName, arguments, rootPath) {
             IconPath = shortcutIcon?.FullName
@@ -218,7 +227,7 @@ internal static class Program
         iconify.RunIconify();
     }
 
-    private static void TestCustomShortcutOptions(string shortcutName, FileInfo shortcutTarget, string[] shortcutArguments, 
+    private static void CreateCustomShortcut_Test(string shortcutName, FileInfo shortcutTarget, string[]? shortcutArguments, 
         bool forAllUsers, FileInfo? shortcutIcon, FileInfo? shortcutTileImage, NameOnTile nameOnTile)
     {
         var strCheck = "O";
@@ -227,7 +236,7 @@ internal static class Program
         Console.WriteLine(shortcutName);
         var exist = (shortcutTarget.Exists) ? strCheck : strCross;
         Console.WriteLine($"{shortcutTarget.FullName} ({exist})");
-        if (shortcutArguments.Length > 0) {
+        if (shortcutArguments?.Length > 0) {
             foreach (var argument in shortcutArguments)
                 Console.WriteLine("\t" + argument);
         }
@@ -248,6 +257,41 @@ internal static class Program
         else imagePrint = "[NULL]";
         Console.WriteLine(imagePrint);
         Console.WriteLine(nameOnTile.ToString("G"));
+        
+#if REMOTE
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
+#endif
+    }
+
+    #endregion
+
+    #region DeleteFunctions
+
+    private static void DeleteCustomShortcut(string shortcutName)
+    {
+        void NotFoundException() => throw new ApplicationException("No custom shortcuts found.");
+        
+        var probableDirectory = new DirectoryInfo(Path.Combine(CustomShortcutGetters.CustomShortcutVbsPath, shortcutName));
+        if (!probableDirectory.Exists) NotFoundException();
+        var validCustomShortcuts = probableDirectory.GetFiles("*.vbs", SearchOption.AllDirectories);
+        if  (validCustomShortcuts.Length == 0) NotFoundException();
+        var customShortcut = CustomShortcut.Load(validCustomShortcuts.First().FullName);
+        customShortcut.Delete();
+    }
+
+    private static void DeleteCustomShortcut_Test(string shortcutName)
+    {
+        var probableDirectory = new DirectoryInfo(Path.Combine(CustomShortcutGetters.CustomShortcutVbsPath, shortcutName));
+        var itExists = probableDirectory.Exists;
+        var itExistsStr = itExists ? "O" : "X";
+        Console.WriteLine($"{probableDirectory.FullName} [{itExistsStr}]");
+        if (itExists)
+        {
+            var validCustomShortcuts = probableDirectory.GetFiles("*.vbs", SearchOption.AllDirectories);
+            if (validCustomShortcuts.Length > 0) Console.WriteLine($"{validCustomShortcuts.First().FullName}");
+            else Console.WriteLine("No .vbs files found.");
+        }
         
 #if REMOTE
         Console.WriteLine("Press any key to exit...");

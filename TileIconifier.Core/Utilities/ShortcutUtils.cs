@@ -75,6 +75,7 @@ namespace TileIconifier.Core.Utilities
 
         public static ShortcutItemTarget? ResolveShortcut(string filePath)
         {
+            // TODO: Replace with SharpShellLink
             // // IWshRuntimeLibrary is in the COM library "Windows Script Host Object Model"
             // var shell = new WshShell();
             //
