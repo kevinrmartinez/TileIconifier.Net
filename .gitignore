@@ -63,3 +63,9 @@ packages
 */obj/
 */Releases/
 *.pdb
+
+
+# =========================
+# Rider project
+# =========================
+.idea
