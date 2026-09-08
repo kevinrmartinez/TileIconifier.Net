@@ -29,8 +29,7 @@
 
 using System.Runtime.InteropServices;
 using System.Text;
-// using IWshRuntimeLibrary;
-using Microsoft.ClearScript.Windows.Core;
+using SharpShellLink.Flags;
 using TileIconifier.Core.Properties;
 using TileIconifier.Core.Shortcut;
 using File = System.IO.File;
@@ -40,12 +39,8 @@ namespace TileIconifier.Core.Utilities
     // Source: https://astoundingprogramming.wordpress.com/2012/12/17/how-to-get-the-target-of-a-windows-shortcut-c/
     public static class ShortcutUtils
     {
-        public static ShortcutItemTarget? GetTargetInfo(string filePath)
-        {
-            var targetInfo = ResolveMsiShortcut(filePath) ?? ResolveShortcut(filePath);
-
-            return targetInfo;
-        }
+        public static ShortcutItemTarget? GetTargetInfo(string filePath) 
+            => ResolveMsiShortcut(filePath) ?? ResolveShortcut(filePath);
 
         public static string GetInternetShortcut(string filePath)
         {
@@ -66,58 +61,17 @@ namespace TileIconifier.Core.Utilities
 
             return url;
         }
-        
-        private const string objShell = "shell";
-        private const string objLink = "link";
-        private const string objArray = "valueArray";
-        private const string createLink = "CreateLink";
-        private const string readLink = "ReadLink";
 
         public static ShortcutItemTarget? ResolveShortcut(string filePath)
         {
-            // TODO: Replace with SharpShellLink
-            // // IWshRuntimeLibrary is in the COM library "Windows Script Host Object Model"
-            // var shell = new WshShell();
-            //
-            // try
-            // {
-            //     var shortcut = (IWshShortcut) shell.CreateShortcut(filePath);
-            //     var iconLocation = shortcut.IconLocation ?? string.Empty;
-            //     return new ShortcutItemTarget
-            //     {
-            //         FilePath = shortcut.TargetPath,
-            //         Arguments = shortcut.Arguments,
-            //         IconLocation = shortcut.IconLocation.Split(',')[0]
-            //     };
-            // }
-            // catch (COMException)
-            // {
-            //     // A COMException is thrown if the file is not a valid shortcut (.lnk) file 
-            //     return null;
-            // }
-            
-            // Again, why does creating an Array(4) is VBS results in an array with 5 positions?
-            var scriptStrings = $"""
-                                 Function {readLink}()
-                                     Dim {objArray}(2)
-                                     Set {objShell} = CreateObject("WScript.Shell")
-                                     Set {objLink} = {objShell}.CreateShortcut("{filePath}")
-                                     {objArray}(0) = {objLink}.TargetPath
-                                     {objArray}(1) = {objLink}.Arguments
-                                     {objArray}(2) = {objLink}.IconLocation
-                                     {readLink} = {objArray}
-                                 End Function
-                                 """;
-
             try
             {
-                var returnedObjs = RunLinkReadScript(scriptStrings);
-                var iconLoc = returnedObjs[2].ToString()?.Split(',')[0];
-                return new ShortcutItemTarget
-                {
-                    FilePath     = returnedObjs[0] as string ?? string.Empty,
-                    Arguments    = returnedObjs[1] as string ?? string.Empty,
-                    IconLocation = iconLoc ?? string.Empty
+                var shortcut = SharpShellLink.Shortcut.ReadFromFile(filePath);
+                if (shortcut.LinkTargetIDList is null) return null;
+                return new ShortcutItemTarget {
+                    FilePath     = shortcut.LinkTargetIDList.Path,
+                    Arguments    = shortcut.StringData?.CommandLineArguments ?? string.Empty,
+                    IconLocation = shortcut.StringData?.IconLocation ?? string.Empty
                 };
             }
             catch (Exception) {
@@ -131,61 +85,17 @@ namespace TileIconifier.Core.Utilities
             var directoryInfo = new FileInfo(shortcutPath).Directory;
             if (directoryInfo == null) return;
             if (!directoryInfo.Exists) directoryInfo.Create();
-
-            // var wsh = new WshShell();
-            // var shortcut = wsh.CreateShortcut(
-            //     shortcutPath) as IWshShortcut;
-            //
-            // if (shortcut == null) return;
-            //
-            // shortcut.Arguments = "";
-            // shortcut.TargetPath = targetPath;
-            // shortcut.WindowStyle = 1;
-            // shortcut.Description = description;
-            // shortcut.WorkingDirectory = workingDirectory ?? new FileInfo(targetPath).Directory?.FullName;
-            // shortcut.IconLocation = iconPath ?? targetPath;
-            // shortcut.Save();
             
-            var scriptStrings = $"""
-                                 Function {createLink}()
-                                   Set {objShell} = CreateObject("WScript.Shell")
-                                   Set {objLink} = {objShell}.CreateShortcut("{shortcutPath}")
-                                   {objLink}.TargetPath = "{targetPath}"
-                                   {objLink}.WindowStyle = 1
-                                   {objLink}.WorkingDirectory = "{workingDirectory ?? new FileInfo(targetPath).Directory?.FullName}"
-                                   {objLink}.Arguments = ""
-                                   {objLink}.Description = "{description}"
-                                   {objLink}.IconLocation = "{iconPath ?? targetPath}"
-                                   {objLink}.Save
-                                   {createLink} = 0
-                                 End Function
-                                 """;
-        
-            RunLinkWriteScript(scriptStrings);
-        }
-        
-        private static VBScriptEngine RunScriptEngine(string script)
-        {
-            var engine = new VBScriptEngine("TileIconifier.Net Script Runner", NullSyncInvoker.Instance);
-            engine.Execute(script);
-            return engine;
-        }
-    
-        private static short RunLinkWriteScript(string script)
-        {
-            var engine = RunScriptEngine(script);
-            // VBS returns Int16 (short) instead of Int32 (int)
-            return (short)engine.Invoke($"{createLink}");
-        }
-    
-        private static object[] RunLinkReadScript(string script)
-        {
-            var engine = RunScriptEngine(script);
-            return (object[])engine.Invoke($"{readLink}");
+            const int iconIndex = 0;
+            var iconLocation = iconPath ?? targetPath;
+            var shortcut = SharpShellLink.Shortcut.CreateShortcut(targetPath, string.Empty, iconLocation, iconIndex);
+            shortcut.StringData?.WorkingDir = workingDirectory ?? new FileInfo(targetPath).Directory?.FullName ?? string.Empty;
+            shortcut.StringData?.NameString = description;
+            shortcut.ShowCommand = ShowCommand.SW_SHOWNORMAL;
+            shortcut.WriteToFile(shortcutPath);
         }
 
-        public static void CreateUrlFile(string path, string target)
-        {
+        public static void CreateUrlFile(string path, string target) {
             File.WriteAllText(path, string.Format(Resources.UrlFileTemplate, target));
         }
 
