@@ -67,9 +67,13 @@ namespace TileIconifier.Core.Utilities
             try
             {
                 var shortcut = SharpShellLink.Shortcut.ReadFromFile(filePath);
-                if (shortcut.LinkTargetIDList is null) return null;
+                string targetPath;
+                if (shortcut.LinkTargetIDList is not null) targetPath = shortcut.LinkTargetIDList.Path;
+                else if (shortcut.ExtraData.EnvironmentVariableDataBlock is not null) targetPath = shortcut.ExtraData.EnvironmentVariableDataBlock.TargetUnicode;
+                else return null;
+                
                 return new ShortcutItemTarget {
-                    FilePath     = shortcut.LinkTargetIDList.Path,
+                    FilePath     = targetPath,
                     Arguments    = shortcut.StringData?.CommandLineArguments ?? string.Empty,
                     IconLocation = shortcut.StringData?.IconLocation ?? string.Empty
                 };
