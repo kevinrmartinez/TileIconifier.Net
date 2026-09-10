@@ -62,6 +62,10 @@ internal static class Program
         Description = "Path of the image to use on the tile icon",
         DefaultValueFactory = _ => null
     };
+    private static readonly Option<bool> OptOverwrite = new("--overwrite") {
+        Description = "If the shortcut already exists, it will be overwritten",
+        DefaultValueFactory = _ => false
+    };
     private static readonly Option<bool> OptNameOnTileLight = new("--name-on-tile-light") {
         Description = "Display the shortcut name on the tile; light text",
         DefaultValueFactory = _ => false,
@@ -85,6 +89,7 @@ internal static class Program
             OptForAllUsers,
             OptShortcutIcon,
             OptShortcutTileImage,
+            OptOverwrite,
             OptNameOnTileLight,
             OptNameOnTileDark
         };
@@ -99,6 +104,7 @@ internal static class Program
                 parseResult.GetRequiredValue(OptShortcutTarget),
                 parseResult.GetValue(OptShortcutArguments),
                 parseResult.GetValue(OptForAllUsers),
+                parseResult.GetValue(OptOverwrite),
                 parseResult.GetValue(OptShortcutIcon),
                 parseResult.GetValue(OptShortcutTileImage),
                 nameOnTile
@@ -116,6 +122,7 @@ internal static class Program
             OptForAllUsers,
             OptShortcutIcon,
             OptShortcutTileImage,
+            OptOverwrite,
             OptNameOnTileLight,
             OptNameOnTileDark
         };
@@ -129,6 +136,7 @@ internal static class Program
                 parseResult.GetRequiredValue(OptShortcutTarget),
                 parseResult.GetValue(OptShortcutArguments),
                 parseResult.GetValue(OptForAllUsers),
+                parseResult.GetValue(OptOverwrite),
                 parseResult.GetValue(OptShortcutIcon),
                 parseResult.GetValue(OptShortcutTileImage),
                 nameOnTile
@@ -188,9 +196,17 @@ internal static class Program
     #region CreateFunctions
 
     private static void CreateCustomShortcut(string shortcutName, FileInfo shortcutTarget, string[]? shortcutArguments,  
-        bool forAllUsers, FileInfo? shortcutIcon, FileInfo? shortcutTileImage, NameOnTile nameOnTile)
+        bool forAllUsers, bool overwrite, FileInfo? shortcutIcon, FileInfo? shortcutTileImage, NameOnTile nameOnTile)
     {
         // TileIconifier.Core can handle shortcuts with the same name by appending _n, where n is an incremental number
+        if (overwrite)
+        {
+            try {
+                DeleteCustomShortcut(shortcutName);
+            }
+            catch (ApplicationException) { } // ignore
+        }
+        
         var rootPath = (!forAllUsers) 
             ? CustomShortcutGetters.CustomShortcutCurrentUserPath 
             : CustomShortcutGetters.CustomShortcutAllUsersPath;
@@ -221,14 +237,14 @@ internal static class Program
                 newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
             }
         }
-        
         newShortcutItem.Properties.CommitChanges();
+        
         var iconify = new TileIcon(newShortcutItem);
         iconify.RunIconify();
     }
 
     private static void CreateCustomShortcut_Test(string shortcutName, FileInfo shortcutTarget, string[]? shortcutArguments, 
-        bool forAllUsers, FileInfo? shortcutIcon, FileInfo? shortcutTileImage, NameOnTile nameOnTile)
+        bool forAllUsers, bool overwrite, FileInfo? shortcutIcon, FileInfo? shortcutTileImage, NameOnTile nameOnTile)
     {
         var strCheck = "O";
         var strCross = "X";
@@ -242,6 +258,7 @@ internal static class Program
         }
         else Console.WriteLine("NONE");
         Console.WriteLine(forAllUsers);
+        Console.WriteLine(overwrite);
         string iconPrint;
         if (shortcutIcon is not null) {
             exist = (shortcutIcon.Exists) ? strCheck : strCross;
