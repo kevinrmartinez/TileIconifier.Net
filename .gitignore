@@ -21,6 +21,8 @@ $RECYCLE.BIN/
 *.DotSettings
 *.DotSettings.user
 
+[Rr]elease/
+
 # =========================
 # Operating System Files
 # =========================

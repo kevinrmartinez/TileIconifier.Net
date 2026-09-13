@@ -43,11 +43,9 @@ namespace TileIconifier.Core
             Instance = LoadConfig(ConfigFilePath);
         }
 
-        [NonSerialized] public string LoadedConfigFilePath;
+        [NonSerialized] public string LoadedConfigFilePath = string.Empty;
 
-        private Config()
-        {
-        }
+        private Config() { }
 
         private Config(string filePath)
         {
@@ -57,11 +55,11 @@ namespace TileIconifier.Core
         private static string ConfigFileName => "TileIconifierConfig.xml";
         private static string ConfigFilePath => Path.Combine(IoUtils.ProgramDataPath, ConfigFileName);
 
-        public string LocaleToUse { get; set; }
+        public string? LocaleToUse { get; set; }
         public bool GetPinnedItems { get; set; }
-        public string LastSkin { get; set; }
+        public string? LastSkin { get; set; }
 
-        public int[] CustomColors { get; set; }
+        public int[]? CustomColors { get; set; }
 
         //calculated on every load - not committed to config file
         public static bool StartMenuUpgradeEnabled { get; set; }

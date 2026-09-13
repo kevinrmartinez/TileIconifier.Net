@@ -35,8 +35,13 @@ namespace TileIconifier.Core.Shortcut.State
     public class ShortcutItemStateController
     {
         // This class lack proper constructor...
-        private ShortcutItemState OldState { get; set; }
-        public ShortcutItemState CurrentState { get; set; }
+        private ShortcutItemState OldState { get; set; } = InitialState;
+        public ShortcutItemState CurrentState { get; set; } = InitialState;
+
+        private static ShortcutItemState InitialState = new ShortcutItemState() {
+            BackgroundColor = ShortcutConstantsAndEnums.DefaultAccentColor ?? "black",
+            ForegroundText = "light",
+        };
 
         public bool HasUnsavedChanges => !CurrentState.Equals(OldState);
 

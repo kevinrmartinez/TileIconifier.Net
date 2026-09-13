@@ -52,18 +52,16 @@ namespace TileIconifier.Core.Utilities
         public static void MarryAppIDs(List<ShortcutItem>? shortcutsList)
         {
             if (shortcutsList == null)  return;
-            
-            using (var powershellInstance = PowerShell.Create())
+
+            using var powershellInstance = PowerShell.Create();
+            powershellInstance.AddCommand("Get-StartApps");
+            var results = powershellInstance.Invoke();
+            foreach (var properties in results.Select(result => result.Properties))
             {
-                powershellInstance.AddCommand("Get-StartApps");
-                var results = powershellInstance.Invoke();
-                foreach (var properties in results.Select(result => result.Properties))
-                {
-                    var shortcutItem =
-                        shortcutsList.First(s => Path.GetFileNameWithoutExtension(s.ShortcutFileInfo.Name) ==
-                                                 (string) properties["Name"].Value);
-                    shortcutItem.AppId = properties["AppID"].Value.ToString() ?? string.Empty;
-                }
+                var shortcutItem =
+                    shortcutsList.First(s => Path.GetFileNameWithoutExtension(s.ShortcutFileInfo.Name) ==
+                                             (string) properties["Name"].Value);
+                shortcutItem.AppId = properties["AppID"].Value.ToString();
             }
         }
     }

@@ -134,7 +134,7 @@ namespace TileIconifier.Core.Shortcut
 
 
         public FileInfo ShortcutFileInfo { get; set; }
-        public string AppId { get; set; }
+        public string? AppId { get; set; }
         public bool? IsPinned { get; set; }
 
         #region Path properties

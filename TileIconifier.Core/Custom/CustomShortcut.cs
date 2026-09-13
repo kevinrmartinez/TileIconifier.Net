@@ -37,8 +37,29 @@ namespace TileIconifier.Core.Custom
     {
         private string? _basicShortcutIcon;
 
-        private CustomShortcut()
+        private CustomShortcut(string vbsFilePath)
         {
+            var vbsFileContents = File.ReadAllText(vbsFilePath);
+
+            var regexMatch = Regex.Match(vbsFileContents,
+                "'Custom Shortcut Type = \"(.*)\".*'Shortcut Name = \"(.*)\".*'Shortcut Path = \"(.*)\".*targetPath = \"(.*)\".*targetArguments = \"(.*)\"\r?\n.*",
+                RegexOptions.Singleline);
+
+            if (!regexMatch.Success)
+            {
+                throw new InvalidCustomShortcutException();
+            }
+
+            var directoryInfo = new FileInfo(vbsFilePath).Directory;
+            if (directoryInfo is null) throw new DirectoryNotFoundException();
+
+            ShortcutName = regexMatch.Groups[2].Value.UnescapeVba();
+            ShortcutItem = new ShortcutItem(regexMatch.Groups[3].Value.UnescapeVba());
+            TargetPath = regexMatch.Groups[4].Value.UnescapeVba();
+            TargetArguments = regexMatch.Groups[5].Value.UnescapeVba();
+            ShortcutType = Enum.Parse<CustomShortcutType>(regexMatch.Groups[1].Value, true);
+            VbsFilePath = vbsFilePath;
+            VbsFolderPath = directoryInfo.FullName + "\\";
         }
 
         internal CustomShortcut(
@@ -89,7 +110,7 @@ namespace TileIconifier.Core.Custom
 
         public void Delete()
         {
-            if (ShortcutItem.ShortcutFileInfo.Directory != null && ShortcutItem.ShortcutFileInfo.Directory.Exists)
+            if (ShortcutItem.ShortcutFileInfo.Directory is { Exists: true })
             {
                 try
                 {
@@ -121,31 +142,7 @@ namespace TileIconifier.Core.Custom
             if (!File.Exists(vbsFilePath))
                 throw new FileNotFoundException(vbsFilePath);
 
-            var vbsFileContents = File.ReadAllText(vbsFilePath);
-
-            var regexMatch = Regex.Match(vbsFileContents,
-                "'Custom Shortcut Type = \"(.*)\".*'Shortcut Name = \"(.*)\".*'Shortcut Path = \"(.*)\".*targetPath = \"(.*)\".*targetArguments = \"(.*)\"\r?\n.*",
-                RegexOptions.Singleline);
-
-            if (!regexMatch.Success)
-            {
-                throw new InvalidCustomShortcutException();
-            }
-
-            var directoryInfo = new FileInfo(vbsFilePath).Directory;
-            if (directoryInfo == null) throw new DirectoryNotFoundException();
-
-            return new CustomShortcut
-            {
-                ShortcutName = regexMatch.Groups[2].Value.UnescapeVba(),
-                ShortcutItem = new ShortcutItem(regexMatch.Groups[3].Value.UnescapeVba()),
-                TargetPath = regexMatch.Groups[4].Value.UnescapeVba(),
-                TargetArguments = regexMatch.Groups[5].Value.UnescapeVba(),
-                ShortcutType =
-                    (CustomShortcutType) Enum.Parse(typeof (CustomShortcutType), regexMatch.Groups[1].Value, true),
-                VbsFilePath = vbsFilePath,
-                VbsFolderPath = directoryInfo.FullName + "\\"
-            };
+            return new CustomShortcut(vbsFilePath);
         }
     }
 }
