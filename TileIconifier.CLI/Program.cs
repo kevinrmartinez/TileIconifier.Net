@@ -1,8 +1,38 @@
-﻿using System.CommandLine;
+﻿#region LICENCE
+
+// /*
+//         The MIT License (MIT)
+// 
+//         Copyright (c) 2026 Kevin Rafael Martinez Johnston
+// 
+//         Permission is hereby granted, free of charge, to any person obtaining a copy
+//         of this software and associated documentation files (the "Software"), to deal
+//         in the Software without restriction, including without limitation the rights
+//         to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//         copies of the Software, and to permit persons to whom the Software is
+//         furnished to do so, subject to the following conditions:
+// 
+//         The above copyright notice and this permission notice shall be included in
+//         all copies or substantial portions of the Software.
+// 
+//         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//         IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//         FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//         AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//         LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//         THE SOFTWARE.
+// 
+// */
+
+#endregion
+
+using System.CommandLine;
 using TileIconifier.Core.Custom;
 using TileIconifier.Core.Custom.Builder;
 using TileIconifier.Core.Shortcut;
 using TileIconifier.Core.TileIconify;
+using TileIconifier.Core.Utilities;
 
 namespace TileIconifier.CLI;
 
@@ -23,14 +53,6 @@ internal static class Program
     }
 
     #region ParserSetUp
-    
-    // TileIconifier/Forms/Shared/FrmIconSelector.cs:86
-    private static readonly List<string> _supportedImageFileTypes = [
-        ".jpeg",
-        ".jpg",
-        ".png",
-        ".bmp"
-    ];
     
     private enum NameOnTile { off, light, dark }
     
@@ -164,7 +186,7 @@ internal static class Program
         Command customShortcut = new Command("custom", "Deletes a custom shortcut") {
             OptShortcutName
         };
-        customShortcut.SetAction(result => DeleteCustomShortcut(result.GetRequiredValue(OptShortcutName)));
+        customShortcut.SetAction(result => DeleteCustomShortcut_Proxy(result.GetRequiredValue(OptShortcutName)));
         deleteCommand.Add(customShortcut);
 
 #if DEBUG
@@ -229,12 +251,26 @@ internal static class Program
             _ => NameOnTile.light.ToString("G")
         };
         
-        if ((shortcutTileImage is { Exists: true }) && _supportedImageFileTypes.Contains(shortcutTileImage.Extension))
+        if (shortcutTileImage is { Exists: true })
         {
-            var iconBytes = Core.Utilities.ImageUtils.LoadFileToByteArray(shortcutTileImage.FullName);
-            if (iconBytes is not null) {
-                newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
-                newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
+            if (TileIcon.SupportedImageFileTypes.Contains(shortcutTileImage.Extension)) {
+                try 
+                {
+                    var iconBytes = ImageUtils.LoadFileToByteArray(shortcutTileImage.FullName);
+                    ArgumentNullException.ThrowIfNull(iconBytes);
+                    newShortcutItem.Properties.CurrentState.MediumImage.SetImage(iconBytes, ShortcutConstantsAndEnums.MediumShortcutDisplaySize);
+                    newShortcutItem.Properties.CurrentState.SmallImage.SetImage(iconBytes, ShortcutConstantsAndEnums.SmallShortcutDisplaySize);
+                }
+                catch (Exception ex) when(ex is ArgumentException or OutOfMemoryException) 
+                {
+                    Console.WriteLine("ERROR: Could not set the tile icon image");
+                    Console.WriteLine(ex.Message);
+                    newShortcutItem.Properties.CurrentState.MediumImage.Bytes = null;
+                    newShortcutItem.Properties.CurrentState.SmallImage.Bytes = null;
+                }
+            }
+            else {
+                Console.WriteLine($"WARNING: --image '{shortcutTileImage.FullName}': Unsupported image format");
             }
         }
         newShortcutItem.Properties.CommitChanges();
@@ -285,6 +321,17 @@ internal static class Program
 
     #region DeleteFunctions
 
+    private static void DeleteCustomShortcut_Proxy(string shortcutName)
+    {
+        try {
+            DeleteCustomShortcut(shortcutName);
+        }
+        catch (ApplicationException ex) {
+            Console.WriteLine(ex.Message);
+            Environment.Exit(1);
+        }
+    }
+    
     private static void DeleteCustomShortcut(string shortcutName)
     {
         void NotFoundException() => throw new ApplicationException("No custom shortcuts found.");

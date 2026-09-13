@@ -38,6 +38,13 @@ namespace TileIconifier.Core.TileIconify
 {
     public class TileIcon
     {
+        public static readonly List<string> SupportedImageFileTypes = [
+            ".jpeg",
+            ".jpg",
+            ".png",
+            ".bmp"
+        ];
+        
         private readonly ShortcutItem _shortcutItem;
 
         public TileIcon(ShortcutItem shortcutItem)
