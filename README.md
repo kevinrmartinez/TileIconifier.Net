@@ -48,6 +48,16 @@ There is some mechanism I have yet to understand overriding these from being til
 
 --------------
 
+## This Fork
+This fork was created with the sole purpose of making a CLI interface to call it from another application, to be more specific, from [RetroLinker](https://github.com/kevinrmartinez/RetroLinker).
+This fork updated the runtime to .NET 10, updated the dependencies/NuGets to the best they can be updated, enabled nullabilty, retire the COM dependency for .lnk creation,
+and added a CLI executable.
+
+**However**, because the intented use case here is the CLI interface, the **GUI is not maintained** (not for now at least), it compiles and runs, but some bugs and null cases haven't been sorted out.
+To know how to use the CLI interface, check [here](./TileIconifier.CLI/README.MD).
+
+--------------
+
 ## Credits
 
 Logo provided by AdamDesrosiers of XDA Developers.
