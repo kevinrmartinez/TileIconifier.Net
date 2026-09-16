@@ -42,11 +42,8 @@ namespace TileIconifier.Core.Shortcut
         /// <returns></returns>
         public static List<ShortcutItem> GetShortcuts(bool refreshCache = false)
         {
-            if (refreshCache)
-                _shortcutsCache = null;
-
-            if (_shortcutsCache != null)
-                return _shortcutsCache;
+            if (refreshCache) _shortcutsCache = null;
+            if (_shortcutsCache != null) return _shortcutsCache;
 
             var shortcutsList = new List<ShortcutItem>();
 
