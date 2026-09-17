@@ -7,7 +7,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <VersionPrefix>0.5.0</VersionPrefix>
-        <!--<PublishReadyToRun>true</PublishReadyToRun>-->
         <PublishSingleFile>true</PublishSingleFile>
     </PropertyGroup>
 
